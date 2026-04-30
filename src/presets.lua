@@ -80,7 +80,7 @@ return {
 			{
 				Name = "ControlFlow",
 				Settings = {
-					Treshold = 0.25,
+					Treshold = 0.9,
 					OpaquePredicate = true
 				}
 			},
