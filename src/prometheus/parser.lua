@@ -131,7 +131,11 @@ local function expect(self, kind, source)
 	end
 
 	local token = peek(self);
-	if self.disableLog then error() end
+	if self.disableLog then
+		error(generateError(self, source
+			and string.format("unexpected token <%s> \"%s\", expected <%s> \"%s\"", token.kind, token.source, kind, source)
+			or string.format("unexpected token <%s> \"%s\", expected <%s>", token.kind, token.source, kind)));
+	end
 	if(source) then
 		logger:error(generateError(self, string.format("unexpected token <%s> \"%s\", expected <%s> \"%s\"", token.kind, token.source, kind, source)));
 	else

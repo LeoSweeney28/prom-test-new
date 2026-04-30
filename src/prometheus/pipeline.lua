@@ -33,6 +33,15 @@ local function cloneShallow(tbl)
 	return copy;
 end
 
+local function validateConfigShape(config)
+	if type(config) ~= "table" then
+		logger:error("Pipeline config must be a table");
+	end
+	if config.Steps ~= nil and type(config.Steps) ~= "table" then
+		logger:error("Pipeline config field 'Steps' must be a table");
+	end
+end
+
 local Pipeline = {
 	NameGenerators = NameGenerators;
 	Steps = Steps;
@@ -88,6 +97,7 @@ end
 
 function Pipeline:fromConfig(config)
 	config = config or {};
+	validateConfigShape(config);
 	local pipeline = Pipeline:new({
 		LuaVersion = config.LuaVersion or LuaVersion.Lua51;
 		PrettyPrint = config.PrettyPrint;
@@ -102,6 +112,9 @@ function Pipeline:fromConfig(config)
 	for _, step in ipairs(steps) do
 		if type(step.Name) ~= "string" then
 			logger:error("Step.Name must be a String");
+		end
+		if step.Settings ~= nil and type(step.Settings) ~= "table" then
+			logger:error(string.format("Step.Settings for step \"%s\" must be a table", step.Name));
 		end
 		local constructor = pipeline.Steps[step.Name];
 		if not constructor then
@@ -218,7 +231,13 @@ function Pipeline:apply(code, filename)
 	for _, step in ipairs(self.steps) do
 		local stepStartTime = gettime();
 		logger:info(string.format("Applying Step \"%s\" ...", step.Name or "Unnamed"));
-		local newAst = step:apply(ast, self);
+		local ok, newAstOrErr = xpcall(function()
+			return step:apply(ast, self);
+		end, debug.traceback);
+		if not ok then
+			logger:error(string.format("Step \"%s\" failed: %s", step.Name or "Unnamed", tostring(newAstOrErr)));
+		end
+		local newAst = newAstOrErr;
 		if type(newAst) == "table" then
 			ast = newAst;
 		end

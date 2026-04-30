@@ -78,12 +78,15 @@ local function print_usage()
 	Prometheus.Logger:info("  --help, -h              Show help");
 end
 
-local function read_config_file(filename)
+local function read_config_file(filename, unsafeConfig)
 	if not file_exists(filename) then
 		Prometheus.Logger:error(string.format('The config file "%s" was not found!', filename));
 	end
 
 	local content = table.concat(lines_from(filename), "\n");
+	if not unsafeConfig and not is_declarative_config(content) then
+		Prometheus.Logger:warn("Config safety mode is enabled. Non-declarative config logic may be unsafe. Use --unsafe-config to bypass this warning.");
+	end
 	local func, err = load_chunk(content, "@" .. filename, {});
 	if not func then
 		Prometheus.Logger:error(string.format('Failed to parse config file "%s": %s', filename, tostring(err)));
@@ -100,6 +103,13 @@ local function read_config_file(filename)
 	return loaded;
 end
 
+local function is_declarative_config(content)
+	-- Fast safety check: declarative configs should be plain table-return statements.
+	-- This blocks obvious dynamic execution unless --unsafe-config is set.
+	local trimmed = content:gsub("^%s+", "");
+	return trimmed:match("^return%s*{") ~= nil;
+end
+
 local function parse_args(rawArgs)
 	rawArgs = rawArgs or {};
 	local options = {
@@ -109,6 +119,7 @@ local function parse_args(rawArgs)
 		luaVersion = nil;
 		prettyPrint = nil;
 		saveErrors = false;
+		unsafeConfig = false;
 	};
 
 	local i = 1;
@@ -134,7 +145,7 @@ local function parse_args(rawArgs)
 				if i > #rawArgs then
 					Prometheus.Logger:error("Missing config path after --config/--c");
 				end
-				options.config = read_config_file(tostring(rawArgs[i]));
+					options.config = read_config_file(tostring(rawArgs[i]), options.unsafeConfig);
 			elseif curr == "--out" or curr == "--o" then
 				i = i + 1;
 				if i > #rawArgs then
@@ -151,6 +162,8 @@ local function parse_args(rawArgs)
 				options.prettyPrint = true;
 			elseif curr == "--saveerrors" then
 				options.saveErrors = true;
+			elseif curr == "--unsafe-config" then
+				options.unsafeConfig = true;
 			elseif curr == "--help" or curr == "-h" then
 				print_usage();
 				os.exit(0);
@@ -188,6 +201,7 @@ end
 if not file_exists(options.sourceFile) then
 	Prometheus.Logger:error(string.format('The File "%s" was not found!', options.sourceFile));
 end
+
 
 if options.saveErrors then
 	Prometheus.Logger.errorCallback = function(...)
