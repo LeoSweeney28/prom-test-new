@@ -99,8 +99,6 @@ local function get(self)
 end
 
 local function is(self, kind, sourceOrN, n)
-	local token = peek(self, n);
-
 	local source = nil;
 	if(type(sourceOrN) == "string") then
 		source = sourceOrN;
@@ -108,6 +106,7 @@ local function is(self, kind, sourceOrN, n)
 		n = sourceOrN;
 	end
 	n = n or 0;
+	local token = peek(self, n);
 
 	if(token.kind == kind) then
 		if(source == nil or token.source == source) then
