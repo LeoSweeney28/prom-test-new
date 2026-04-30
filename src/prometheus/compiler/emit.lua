@@ -10,14 +10,20 @@ local util = require("prometheus.util");
 local constants = require("prometheus.compiler.constants");
 local MAX_REGS = constants.MAX_REGS;
 local BlockOptimizer = require("prometheus.compiler.block_optimizer");
+local VmHardening = require("prometheus.compiler.vm_hardening");
 
 return function(Compiler)
     function Compiler:emitContainerFuncBody()
         local blocks = {};
 
-        util.shuffle(self.blocks);
+        local hardenedBlocks = VmHardening:hardenBlocks(self.blocks, {
+            randRange = function(a, b) return self:randRange(a, b) end,
+            maxStatements = 140,
+        });
 
-        for i, block in ipairs(self.blocks) do
+        util.shuffle(hardenedBlocks);
+
+        for i, block in ipairs(hardenedBlocks) do
             local id = block.id;
             local blockstats = block.statements;
 
