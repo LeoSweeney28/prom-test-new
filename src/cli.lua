@@ -101,6 +101,7 @@ local function read_config_file(filename)
 end
 
 local function parse_args(rawArgs)
+	rawArgs = rawArgs or {};
 	local options = {
 		config = nil;
 		sourceFile = nil;
@@ -113,6 +114,9 @@ local function parse_args(rawArgs)
 	local i = 1;
 	while i <= #rawArgs do
 		local curr = rawArgs[i];
+		if type(curr) ~= "string" then
+			Prometheus.Logger:error(string.format("Invalid argument at position %d", i));
+		end
 		if curr:sub(1, 2) == "--" or curr == "-h" then
 			if curr == "--preset" or curr == "--p" then
 				i = i + 1;

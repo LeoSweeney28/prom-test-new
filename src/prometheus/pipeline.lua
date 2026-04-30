@@ -156,6 +156,10 @@ function Pipeline:setNameGenerator(nameGenerator)
 end
 
 function Pipeline:apply(code, filename)
+	if type(code) ~= "string" then
+		logger:error("Pipeline:apply expects the first argument to be a string");
+	end
+
 	local startTime = gettime();
 	filename = filename or "Anonymous Script";
 	logger:info(string.format("Applying Obfuscation Pipeline to %s ...", filename));
@@ -228,6 +232,11 @@ function Pipeline:apply(code, filename)
 	logger:info(string.format("Generated Code size is %.2f%% of the Source Code size", (string.len(code) / sourceLen) * 100));
 
 	return code;
+end
+
+function Pipeline:setPrettyPrint(prettyPrint)
+	self.PrettyPrint = prettyPrint and true or false;
+	self.unparser:setPrettyPrint(self.PrettyPrint);
 end
 
 function Pipeline:unparse(ast)
