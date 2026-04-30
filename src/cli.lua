@@ -78,6 +78,8 @@ local function print_usage()
 	Prometheus.Logger:info("  --help, -h              Show help");
 end
 
+local is_declarative_config;
+
 local function read_config_file(filename, unsafeConfig)
 	if not file_exists(filename) then
 		Prometheus.Logger:error(string.format('The config file "%s" was not found!', filename));
@@ -103,7 +105,7 @@ local function read_config_file(filename, unsafeConfig)
 	return loaded;
 end
 
-local function is_declarative_config(content)
+is_declarative_config = function(content)
 	-- Fast safety check: declarative configs should be plain table-return statements.
 	-- This blocks obvious dynamic execution unless --unsafe-config is set.
 	local trimmed = content:gsub("^%s+", "");
@@ -121,6 +123,13 @@ local function parse_args(rawArgs)
 		saveErrors = false;
 		unsafeConfig = false;
 	};
+
+	for idx = 1, #rawArgs do
+		if rawArgs[idx] == "--unsafe-config" then
+			options.unsafeConfig = true;
+			break;
+		end
+	end
 
 	local i = 1;
 	while i <= #rawArgs do
