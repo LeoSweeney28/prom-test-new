@@ -81,6 +81,39 @@ function Compiler:popRegisterUsageInfo()
     self.registers = info.registers;
 end
 
+function Compiler:_initRngSeed()
+    local t = tostring({}):match("0x(%x+)") or "0"
+    local addr = tonumber(t, 16) or 0
+    local clock = math.floor((os.clock() or 0) * 1000000)
+    local mem = collectgarbage("count") or 0
+    local seed = (addr + (clock * 33) + math.floor(mem * 1000) + math.floor((self.upvalsProxyLenReturn or 0) * 17)) % 0x80000000
+    if seed == 0 then
+        seed = 0x6D2B79F5
+    end
+    self._rngState = seed
+end
+
+function Compiler:randRange(minValue, maxValue)
+    local state = self._rngState or 0x6D2B79F5
+    state = (1103515245 * state + 12345) % 0x80000000
+    self._rngState = state
+
+    if minValue == nil and maxValue == nil then
+        return state / 0x80000000
+    end
+
+    if maxValue == nil then
+        maxValue = minValue
+        minValue = 1
+    end
+
+    if maxValue < minValue then
+        minValue, maxValue = maxValue, minValue
+    end
+
+    return minValue + (state % (maxValue - minValue + 1))
+end
+
 function Compiler:compile(ast)
     self.blocks = {};
     self.registers = {};
@@ -96,6 +129,7 @@ function Compiler:compile(ast)
     self.registerUsageStack = {};
 
     self.upvalsProxyLenReturn = math.random(-2^22, 2^22);
+    self:_initRngSeed();
 
     local newGlobalScope = Scope:newGlobal();
     local psc = Scope:new(newGlobalScope, nil);
