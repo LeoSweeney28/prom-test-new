@@ -80,9 +80,8 @@ return {
 			{
 				Name = "ControlFlow",
 				Settings = {
-					Treshold = 0.85,
-					OpaquePredicate = true,
-					WrapLayers = 2
+					Treshold = 0.9,
+					OpaquePredicate = true
 				}
 			},
 			{ Name = "WrapInFunction", Settings = {} },
@@ -125,9 +124,8 @@ return {
 			{
 				Name = "ControlFlow",
 				Settings = {
-					Treshold = 0.95,
-					OpaquePredicate = true,
-					WrapLayers = 3
+					Treshold = 0.45,
+					OpaquePredicate = true
 				}
 			},
 			{ Name = "WrapInFunction", Settings = {} },

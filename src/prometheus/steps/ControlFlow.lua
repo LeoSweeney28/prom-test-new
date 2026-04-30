@@ -5,13 +5,13 @@ local Scope = require("prometheus.scope")
 local AstKind = Ast.AstKind
 
 local ControlFlow = Step:extend()
-ControlFlow.Description = "This step adds lightweight control-flow obfuscation wrappers."
-ControlFlow.Name = "Control Flow"
+ControlFlow.Description = "Enhanced control-flow obfuscation with randomized opaque predicates and wrappers."
+ControlFlow.Name = "Control Flow++"
 
 ControlFlow.SettingsDescriptor = {
 	Treshold = {
 		type = "number",
-		default = 0.85,
+		default = 0.4,
 		min = 0,
 		max = 1,
 	},
@@ -21,15 +21,9 @@ ControlFlow.SettingsDescriptor = {
 	},
 	MaxStatementsPerBlock = {
 		type = "number",
-		default = 256,
+		default = 40,
 		min = 0,
-		max = 2048,
-	},
-	WrapLayers = {
-		type = "number",
-		default = 2,
-		min = 1,
-		max = 6,
+		max = 128,
 	},
 }
 
@@ -46,43 +40,105 @@ local EXCLUDED = {
 	[AstKind.RepeatStatement] = true,
 }
 
-function ControlFlow:init(_) end
+function ControlFlow:init() end
 
-local function canWrapStatement(statement)
+local function canWrap(statement)
 	return statement and not EXCLUDED[statement.kind]
 end
 
+-- More diverse opaque predicates
 function ControlFlow:createOpaqueTrueExpression()
-	local a = math.random(1200, 9999)
-	local b = math.random(31, 97)
-	local c = a * b
+	local mode = math.random(1, 3)
 
-	return Ast.EqualsExpression(
-		Ast.SubExpression(
-			Ast.NumberExpression(c),
-			Ast.MulExpression(Ast.NumberExpression(a - 1), Ast.NumberExpression(b), false),
+	if mode == 1 then
+		-- arithmetic identity
+		local a = math.random(1000, 9000)
+		local b = math.random(20, 80)
+		return Ast.EqualsExpression(
+			Ast.SubExpression(
+				Ast.NumberExpression(a * b),
+				Ast.MulExpression(Ast.NumberExpression(a - 1), Ast.NumberExpression(b), false),
+				false
+			),
+			Ast.NumberExpression(b),
 			false
-		),
-		Ast.NumberExpression(b),
+		)
+
+	elseif mode == 2 then
+		-- modulo invariant
+		local a = math.random(1000, 5000)
+		local b = math.random(2, 50)
+		return Ast.EqualsExpression(
+			Ast.ModExpression(
+				Ast.NumberExpression(a * b),
+				Ast.NumberExpression(b),
+				false
+			),
+			Ast.NumberExpression(0),
+			false
+		)
+
+	else
+		-- double negation boolean
+		return Ast.NotExpression(
+			Ast.NotExpression(
+				Ast.BooleanExpression(true),
+				false
+			),
+			false
+		)
+	end
+end
+
+-- Dead false predicate
+function ControlFlow:createOpaqueFalseExpression()
+	return Ast.EqualsExpression(
+		Ast.NumberExpression(math.random(1, 1000)),
+		Ast.NumberExpression(math.random(1001, 2000)),
 		false
 	)
 end
 
 function ControlFlow:wrapStatement(statement, parentScope)
-	local wrapped = statement
-	for _ = 1, self.WrapLayers do
-		local wrapperScope = Scope:new(parentScope)
-		local innerBlock = Ast.Block({ wrapped }, wrapperScope)
+	local wrapperScope = Scope:new(parentScope)
+	local innerBlock = Ast.Block({ statement }, wrapperScope)
 
+	local mode = math.random(1, 3)
+
+	-- Mode 1: Simple if
+	if mode == 1 and self.OpaquePredicate then
+		return Ast.IfStatement(
+			self:createOpaqueTrueExpression(),
+			innerBlock,
+			{},
+			nil
+		)
+
+	-- Mode 2: If + dead branch
+	elseif mode == 2 and self.OpaquePredicate then
+		local deadBlock = Ast.Block({}, Scope:new(parentScope))
+
+		return Ast.IfStatement(
+			self:createOpaqueTrueExpression(),
+			innerBlock,
+			{},
+			deadBlock
+		)
+
+	-- Mode 3: Nested Do + If
+	else
 		if self.OpaquePredicate then
-			local cond = self:createOpaqueTrueExpression()
-			wrapped = Ast.IfStatement(cond, innerBlock, {}, nil)
+			local innerIf = Ast.IfStatement(
+				self:createOpaqueTrueExpression(),
+				innerBlock,
+				{},
+				nil
+			)
+			return Ast.DoStatement(Ast.Block({ innerIf }, wrapperScope))
 		else
-			wrapped = Ast.DoStatement(innerBlock)
+			return Ast.DoStatement(innerBlock)
 		end
 	end
-
-	return wrapped
 end
 
 function ControlFlow:processBlock(block)
@@ -90,36 +146,42 @@ function ControlFlow:processBlock(block)
 		return
 	end
 
-	local wrappedInBlock = 0
-	local statements = block.statements
-	for i = 1, #statements do
-		local statement = statements[i]
+	local count = 0
+	local stmts = block.statements
 
-		if statement.kind == AstKind.DoStatement and statement.body then
-			self:processBlock(statement.body)
-		elseif statement.kind == AstKind.IfStatement then
-			self:processBlock(statement.body)
-			for _, elseifPart in ipairs(statement.elseifs or {}) do
-				self:processBlock(elseifPart.body)
-			end
-			self:processBlock(statement.elsebody)
-		elseif statement.kind == AstKind.WhileStatement or statement.kind == AstKind.RepeatStatement then
-			self:processBlock(statement.body)
-		elseif statement.kind == AstKind.ForStatement or statement.kind == AstKind.ForInStatement then
-			self:processBlock(statement.body)
-		elseif statement.kind == AstKind.FunctionDeclaration or statement.kind == AstKind.LocalFunctionDeclaration then
-			self:processBlock(statement.body)
+	for i = 1, #stmts do
+		local stmt = stmts[i]
+
+		-- recurse safely
+		if stmt.body then
+			self:processBlock(stmt.body)
 		end
 
-		if wrappedInBlock < self.MaxStatementsPerBlock and canWrapStatement(statement) and math.random() <= self.Treshold then
-			statements[i] = self:wrapStatement(statement, block.scope)
-			wrappedInBlock = wrappedInBlock + 1
+		if stmt.elsebody then
+			self:processBlock(stmt.elsebody)
+		end
+
+		if stmt.elseifs then
+			for _, e in ipairs(stmt.elseifs) do
+				self:processBlock(e.body)
+			end
+		end
+
+		-- wrapping logic
+		if count < self.MaxStatementsPerBlock
+			and canWrap(stmt)
+			and math.random() <= self.Treshold then
+
+			stmts[i] = self:wrapStatement(stmt, block.scope)
+			count = count + 1
 		end
 	end
 end
 
 function ControlFlow:apply(ast)
-	self:processBlock(ast.body)
+	if ast and ast.body then
+		self:processBlock(ast.body)
+	end
 	return ast
 end
 

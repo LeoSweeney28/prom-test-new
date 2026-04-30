@@ -24,7 +24,7 @@ local expressionEvaluators = {
     end,
 }
 
-local function createRandomASTCFlowExpression(resultBool)
+local function createRandomASTCFlowExpression(compiler, resultBool)
     local expTB = {
         Ast.GreaterThanExpression,
         Ast.LessThanExpression,
@@ -35,9 +35,9 @@ local function createRandomASTCFlowExpression(resultBool)
 
     local leftInt, rightInt, boolResult, randomExp
     repeat
-        randomExp = expTB[math.random(1, #expTB)]
-        leftInt = Ast.NumberExpression(math.random(1, 2^24))
-        rightInt = Ast.NumberExpression(math.random(1, 2^24))
+        randomExp = expTB[compiler:randRange(1, #expTB)]
+        leftInt = Ast.NumberExpression(compiler:randRange(1, 2^24))
+        rightInt = Ast.NumberExpression(compiler:randRange(1, 2^24))
         boolResult = expressionEvaluators[randomExp](leftInt.value, rightInt.value)
     until boolResult == resultBool
 
@@ -50,7 +50,7 @@ return function(self, expression, _, numReturns)
     for i = 1, numReturns do
         regs[i] = self:allocRegister();
         if i == 1 then
-            self:addStatement(self:setRegister(scope, regs[i], createRandomASTCFlowExpression(expression.value)), {regs[i]}, {}, false);
+            self:addStatement(self:setRegister(scope, regs[i], createRandomASTCFlowExpression(self, expression.value)), {regs[i]}, {}, false);
         else
             self:addStatement(self:setRegister(scope, regs[i], Ast.NilExpression()), {regs[i]}, {}, false);
         end

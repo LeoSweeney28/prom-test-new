@@ -35,7 +35,7 @@ return function(self, statement, funcDepth)
     self:addStatement(self:setRegister(scope, tmpReg, Ast.NumberExpression(0)), {tmpReg}, {}, false);
     local incrementIsNegReg = self:allocRegister(false);
 
-    local shouldSwap3 = math.random(1, 2) == 2;
+    local shouldSwap3 = self:randRange(1, 2) == 2;
     local shuffledRegs4 = shouldSwap3 and {incrementReg, tmpReg} or {tmpReg, incrementReg};
     self:addStatement(self:setRegister(scope, incrementIsNegReg, Ast[shouldSwap3 and "LessThanExpression" or "GreaterThanExpression"](self:register(scope, shuffledRegs4[1]), self:register(scope, shuffledRegs4[2]))), {incrementIsNegReg}, {shuffledRegs4[1], shuffledRegs4[2]}, false);
 
@@ -61,12 +61,12 @@ return function(self, statement, funcDepth)
     local tmpReg2 = self:allocRegister(false);
     self:addStatement(self:setRegister(scope, tmpReg2, Ast.NotExpression(self:register(scope, incrementIsNegReg))), {tmpReg2}, {incrementIsNegReg}, false);
 
-    local shouldSwap = math.random(1, 2) == 2;
+    local shouldSwap = self:randRange(1, 2) == 2;
     local shuffledRegs2 = shouldSwap and {currentReg, finalReg} or {finalReg, currentReg};
     self:addStatement(self:setRegister(scope, tmpReg1, Ast[shouldSwap and "LessThanOrEqualsExpression" or "GreaterThanOrEqualsExpression"](self:register(scope, shuffledRegs2[1]), self:register(scope, shuffledRegs2[2]))), {tmpReg1}, {shuffledRegs2[1], shuffledRegs2[2]}, false);
     self:addStatement(self:setRegister(scope, tmpReg1, Ast.AndExpression(self:register(scope, tmpReg2), self:register(scope, tmpReg1))), {tmpReg1}, {tmpReg1, tmpReg2}, false);
 
-    local shouldSwap2 = math.random(1, 2) == 2;
+    local shouldSwap2 = self:randRange(1, 2) == 2;
     local shuffledRegs3 = shouldSwap2 and {currentReg, finalReg} or {finalReg, currentReg};
     self:addStatement(self:setRegister(scope, tmpReg2, Ast[shouldSwap2 and "GreaterThanOrEqualsExpression" or "LessThanOrEqualsExpression"](self:register(scope, shuffledRegs3[1]), self:register(scope, shuffledRegs3[2]))), {tmpReg2}, {shuffledRegs3[1], shuffledRegs3[2]}, false);
 

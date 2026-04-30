@@ -125,8 +125,10 @@ function ConstantArray:createArray()
 end
 
 function ConstantArray:indexing(index, data)
-	if self.LocalWrapperCount > 0 and data.functionData.local_wrappers then
-		local wrappers = data.functionData.local_wrappers;
+	local currentScope = data and data.scope or self.rootScope;
+	local functionData = data and data.functionData or nil;
+	if self.LocalWrapperCount > 0 and functionData and functionData.local_wrappers then
+		local wrappers = functionData.local_wrappers;
 		local wrapper = wrappers[math.random(#wrappers)];
 
 		local args = {};
@@ -139,13 +141,17 @@ function ConstantArray:indexing(index, data)
 			end
 		end
 
-		data.scope:addReferenceToHigherScope(wrappers.scope, wrappers.id);
+		if currentScope and currentScope.addReferenceToHigherScope then
+			currentScope:addReferenceToHigherScope(wrappers.scope, wrappers.id);
+		end
 		return Ast.FunctionCallExpression(Ast.IndexExpression(
 			Ast.VariableExpression(wrappers.scope, wrappers.id),
 			Ast.StringExpression(wrapper.index)
 		), args);
 	else
-		data.scope:addReferenceToHigherScope(self.rootScope, self.wrapperId);
+		if currentScope and currentScope.addReferenceToHigherScope then
+			currentScope:addReferenceToHigherScope(self.rootScope, self.wrapperId);
+		end
 		return Ast.FunctionCallExpression(Ast.VariableExpression(self.rootScope, self.wrapperId), {
 			Ast.NumberExpression(index - self.wrapperOffset);
 		});

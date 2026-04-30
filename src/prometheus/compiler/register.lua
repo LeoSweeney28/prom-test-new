@@ -13,7 +13,9 @@ local MAX_REGS = constants.MAX_REGS;
 return function(Compiler)
     function Compiler:freeRegister(id, force)
         if force or not (self.registers[id] == self.VAR_REGISTER) then
-            self.usedRegisters = self.usedRegisters - 1;
+            if self.registers[id] then
+                self.usedRegisters = math.max(0, self.usedRegisters - 1);
+            end
             self.registers[id] = false
         end
     end
@@ -40,7 +42,7 @@ return function(Compiler)
         local id = 0;
         if self.usedRegisters < MAX_REGS * constants.MAX_REGS_MUL then
             repeat
-                id = math.random(1, MAX_REGS - 1);
+                id = self:randRange(1, MAX_REGS - 1);
             until not self.registers[id];
         else
             repeat
@@ -218,7 +220,7 @@ return function(Compiler)
 
     function Compiler:setPos(scope, val)
         if not val then
-            local v = Ast.IndexExpression(self:env(scope), randomStrings.randomStringNode(math.random(12, 14)));
+            local v = Ast.IndexExpression(self:env(scope), randomStrings.randomStringNode(self:randRange(12, 14)));
             scope:addReferenceToHigherScope(self.containerFuncScope, self.posVar);
             return Ast.AssignmentStatement({Ast.AssignmentVariable(self.containerFuncScope, self.posVar)}, {v});
         end
