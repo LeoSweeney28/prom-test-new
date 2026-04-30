@@ -32,7 +32,7 @@ function VmHardening:normalizeStatementMeta(stat)
     end
 
     if not isTable(stat.statement) then
-        stat.statement = stat.statement or Ast.DoStatement(Ast.Block({}, nil))
+        stat.statement = Ast.DoStatement(Ast.Block({}, stat.scope))
     end
 
     if not isTable(stat.writes) then
@@ -66,9 +66,12 @@ function VmHardening:normalizeBlock(block)
         block.advanceToNextBlock = true
     end
 
+    local normalizedStatements = {}
     for i = 1, #block.statements do
-        block.statements[i] = self:normalizeStatementMeta(block.statements[i])
+        local normalized = self:normalizeStatementMeta(block.statements[i])
+        normalizedStatements[#normalizedStatements + 1] = normalized
     end
+    block.statements = normalizedStatements
 
     return block
 end

@@ -13,6 +13,14 @@ local BlockOptimizer = require("prometheus.compiler.block_optimizer");
 local VmHardening = require("prometheus.compiler.vm_hardening");
 
 return function(Compiler)
+    local function shuffleWithCompilerRng(list, randRange)
+        for i = #list, 2, -1 do
+            local j = randRange(1, i)
+            list[i], list[j] = list[j], list[i]
+        end
+        return list
+    end
+
     function Compiler:emitContainerFuncBody()
         local blocks = {};
 
@@ -21,7 +29,7 @@ return function(Compiler)
             maxStatements = 140,
         });
 
-        util.shuffle(hardenedBlocks);
+        shuffleWithCompilerRng(hardenedBlocks, function(a, b) return self:randRange(a, b) end);
 
         for i, block in ipairs(hardenedBlocks) do
             local id = block.id;
