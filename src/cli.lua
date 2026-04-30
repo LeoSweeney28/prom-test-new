@@ -4,177 +4,236 @@
 --
 -- This Script contains the Code for the Prometheus CLI.
 
--- Configure package.path for requiring Prometheus.
 local function script_path()
-	local str = debug.getinfo(2, "S").source:sub(2)
-	return str:match("(.*[/%\\])")
+	local str = debug.getinfo(2, "S").source:sub(2);
+	return str:match("(.*[/%\\])");
 end
-package.path = script_path() .. "?.lua;" .. package.path
+package.path = script_path() .. "?.lua;" .. package.path;
+
 ---@diagnostic disable-next-line: different-requires
-local Prometheus = require("prometheus")
-Prometheus.Logger.logLevel = Prometheus.Logger.LogLevel.Info
+local Prometheus = require("prometheus");
+Prometheus.Logger.logLevel = Prometheus.Logger.LogLevel.Info;
+Prometheus.colors.enabled = true;
 
--- Check if the file exists
 local function file_exists(file)
-	local f = io.open(file, "rb")
+	local f = io.open(file, "rb");
 	if f then
-		f:close()
+		f:close();
 	end
-	return f ~= nil
+	return f ~= nil;
 end
 
-string.split = function(str, sep)
-	local fields = {}
-	local pattern = string.format("([^%s]+)", sep)
-	str:gsub(pattern, function(c)
-		fields[#fields + 1] = c
-	end)
-	return fields
-end
-
--- get all lines from a file, returns an empty
--- list/table if the file does not exist
 local function lines_from(file)
 	if not file_exists(file) then
-		return {}
+		return {};
 	end
-	local lines = {}
+	local lines = {};
 	for line in io.lines(file) do
-		lines[#lines + 1] = line
+		lines[#lines + 1] = line;
 	end
-	return lines
+	return lines;
 end
 
 local function load_chunk(content, chunkName, environment)
 	if type(loadstring) == "function" then
-		local func, err = loadstring(content, chunkName)
+		local func, err = loadstring(content, chunkName);
 		if not func then
-			return nil, err
+			return nil, err;
 		end
 		if environment and type(setfenv) == "function" then
-			setfenv(func, environment)
+			setfenv(func, environment);
 		elseif environment and type(load) == "function" then
-			return load(content, chunkName, "t", environment)
+			return load(content, chunkName, "t", environment);
 		end
-		return func
+		return func;
 	end
 
 	if type(load) ~= "function" then
-		return nil, "No load function available"
+		return nil, "No load function available";
 	end
 
-	return load(content, chunkName, "t", environment)
+	return load(content, chunkName, "t", environment);
 end
 
--- CLI
-local config, sourceFile, outFile, luaVersion, prettyPrint
+local function clone(value)
+	if type(value) ~= "table" then
+		return value;
+	end
+	local out = {};
+	for k, v in pairs(value) do
+		out[k] = clone(v);
+	end
+	return out;
+end
 
-Prometheus.colors.enabled = true
+local function print_usage()
+	Prometheus.Logger:info("Usage: prometheus [options] <input.lua>");
+	Prometheus.Logger:info("  --preset, --p <name>    Use built-in preset");
+	Prometheus.Logger:info("  --config, --c <file>    Use config lua file");
+	Prometheus.Logger:info("  --out, --o <file>       Output file");
+	Prometheus.Logger:info("  --Lua51 | --LuaU        Override Lua target version");
+	Prometheus.Logger:info("  --pretty                Enable pretty print mode");
+	Prometheus.Logger:info("  --nocolors              Disable colored logs");
+	Prometheus.Logger:info("  --saveerrors            Save parser/step errors to *.error.txt");
+	Prometheus.Logger:info("  --help, -h              Show help");
+end
 
--- Parse Arguments
-local i = 1
-while i <= #arg do
-	local curr = arg[i]
-	if curr:sub(1, 2) == "--" then
-		if curr == "--preset" or curr == "--p" then
-			if config then
-				Prometheus.Logger:warn("The config was set multiple times")
-			end
+local function read_config_file(filename, unsafeConfig)
+	if not file_exists(filename) then
+		Prometheus.Logger:error(string.format('The config file "%s" was not found!', filename));
+	end
 
-			i = i + 1
-			local preset = Prometheus.Presets[arg[i]]
-			if not preset then
-				Prometheus.Logger:error(string.format('A Preset with the name "%s" was not found!', tostring(arg[i])))
-			end
+	local content = table.concat(lines_from(filename), "\n");
+	if not unsafeConfig and not is_declarative_config(content) then
+		Prometheus.Logger:warn("Config safety mode is enabled. Non-declarative config logic may be unsafe. Use --unsafe-config to bypass this warning.");
+	end
+	local func, err = load_chunk(content, "@" .. filename, {});
+	if not func then
+		Prometheus.Logger:error(string.format('Failed to parse config file "%s": %s', filename, tostring(err)));
+	end
 
-			config = preset
-		elseif curr == "--config" or curr == "--c" then
-			i = i + 1
-			local filename = tostring(arg[i])
-			if not file_exists(filename) then
-				Prometheus.Logger:error(string.format('The config file "%s" was not found!', filename))
-			end
+	local ok, loaded = pcall(func);
+	if not ok then
+		Prometheus.Logger:error(string.format('Failed to execute config file "%s": %s', filename, tostring(loaded)));
+	end
+	if type(loaded) ~= "table" then
+		Prometheus.Logger:error(string.format('Config file "%s" must return a table!', filename));
+	end
 
-			local content = table.concat(lines_from(filename), "\n")
-			-- Load Config from File
-			local func, err = load_chunk(content, "@" .. filename, {})
-			if not func then
-				Prometheus.Logger:error(string.format('Failed to parse config file "%s": %s', filename, tostring(err)))
-			end
-			config = func()
-		elseif curr == "--out" or curr == "--o" then
-			i = i + 1
-			if outFile then
-				Prometheus.Logger:warn("The output file was specified multiple times!")
-			end
-			outFile = arg[i]
-		elseif curr == "--nocolors" then
-			Prometheus.colors.enabled = false
-		elseif curr == "--Lua51" then
-			luaVersion = "Lua51"
-		elseif curr == "--LuaU" then
-			luaVersion = "LuaU"
-		elseif curr == "--pretty" then
-			prettyPrint = true
-		elseif curr == "--saveerrors" then
-			-- Override error callback
-			Prometheus.Logger.errorCallback = function(...)
-				print(Prometheus.colors(Prometheus.Config.NameUpper .. ": " .. ..., "red"))
+	return loaded;
+end
 
-				local args = { ... }
-				local message = table.concat(args, " ")
+local function is_declarative_config(content)
+	-- Fast safety check: declarative configs should be plain table-return statements.
+	-- This blocks obvious dynamic execution unless --unsafe-config is set.
+	local trimmed = content:gsub("^%s+", "");
+	return trimmed:match("^return%s*{") ~= nil;
+end
 
-				local fileName = sourceFile:sub(-4) == ".lua" and sourceFile:sub(0, -5) .. ".error.txt"
-					or sourceFile .. ".error.txt"
-				local handle = io.open(fileName, "w")
-				handle:write(message)
-				handle:close()
+local function parse_args(rawArgs)
+	rawArgs = rawArgs or {};
+	local options = {
+		config = nil;
+		sourceFile = nil;
+		outFile = nil;
+		luaVersion = nil;
+		prettyPrint = nil;
+		saveErrors = false;
+		unsafeConfig = false;
+	};
 
-				os.exit(1)
+	local i = 1;
+	while i <= #rawArgs do
+		local curr = rawArgs[i];
+		if type(curr) ~= "string" then
+			Prometheus.Logger:error(string.format("Invalid argument at position %d", i));
+		end
+		if curr:sub(1, 2) == "--" or curr == "-h" then
+			if curr == "--preset" or curr == "--p" then
+				i = i + 1;
+				if i > #rawArgs then
+					Prometheus.Logger:error("Missing preset name after --preset/--p");
+				end
+				local presetName = tostring(rawArgs[i]);
+				local preset = Prometheus.Presets[presetName];
+				if not preset then
+					Prometheus.Logger:error(string.format('A Preset with the name "%s" was not found!', presetName));
+				end
+				options.config = clone(preset);
+			elseif curr == "--config" or curr == "--c" then
+				i = i + 1;
+				if i > #rawArgs then
+					Prometheus.Logger:error("Missing config path after --config/--c");
+				end
+					options.config = read_config_file(tostring(rawArgs[i]), options.unsafeConfig);
+			elseif curr == "--out" or curr == "--o" then
+				i = i + 1;
+				if i > #rawArgs then
+					Prometheus.Logger:error("Missing output path after --out/--o");
+				end
+				options.outFile = tostring(rawArgs[i]);
+			elseif curr == "--nocolors" then
+				Prometheus.colors.enabled = false;
+			elseif curr == "--Lua51" then
+				options.luaVersion = "Lua51";
+			elseif curr == "--LuaU" then
+				options.luaVersion = "LuaU";
+			elseif curr == "--pretty" then
+				options.prettyPrint = true;
+			elseif curr == "--saveerrors" then
+				options.saveErrors = true;
+			elseif curr == "--unsafe-config" then
+				options.unsafeConfig = true;
+			elseif curr == "--help" or curr == "-h" then
+				print_usage();
+				os.exit(0);
+			else
+				Prometheus.Logger:warn(string.format('The option "%s" is not valid and therefore ignored', curr));
 			end
 		else
-			Prometheus.Logger:warn(string.format('The option "%s" is not valid and therefore ignored', curr))
+			if options.sourceFile then
+				Prometheus.Logger:error(string.format('Unexpected argument "%s"', rawArgs[i]));
+			end
+			options.sourceFile = tostring(rawArgs[i]);
 		end
-	else
-		if sourceFile then
-			Prometheus.Logger:error(string.format('Unexpected argument "%s"', arg[i]))
-		end
-		sourceFile = tostring(arg[i])
+		i = i + 1;
 	end
-	i = i + 1
+
+	return options;
 end
 
-if not sourceFile then
-	Prometheus.Logger:error("No input file was specified!")
+local options = parse_args(arg);
+if not options.sourceFile then
+	print_usage();
+	Prometheus.Logger:error("No input file was specified!");
 end
 
-if not config then
-	Prometheus.Logger:warn("No config was specified, falling back to Minify preset")
-	config = Prometheus.Presets.Minify
+local config = options.config or clone(Prometheus.Presets.Minify);
+if not options.config then
+	Prometheus.Logger:warn("No config was specified, falling back to Minify preset");
 end
 
--- Add Option to override Lua Version
-config.LuaVersion = luaVersion or config.LuaVersion
-config.PrettyPrint = prettyPrint ~= nil and prettyPrint or config.PrettyPrint
-
-if not file_exists(sourceFile) then
-	Prometheus.Logger:error(string.format('The File "%s" was not found!', sourceFile))
+config.LuaVersion = options.luaVersion or config.LuaVersion;
+if options.prettyPrint ~= nil then
+	config.PrettyPrint = options.prettyPrint;
 end
 
+if not file_exists(options.sourceFile) then
+	Prometheus.Logger:error(string.format('The File "%s" was not found!', options.sourceFile));
+end
+
+
+if options.saveErrors then
+	Prometheus.Logger.errorCallback = function(...)
+		print(Prometheus.colors(Prometheus.Config.NameUpper .. ": " .. ..., "red"));
+		local message = table.concat({ ... }, " ");
+		local fileName = options.sourceFile:sub(-4) == ".lua" and options.sourceFile:sub(0, -5) .. ".error.txt" or options.sourceFile .. ".error.txt";
+		local handle = io.open(fileName, "w");
+		if handle then
+			handle:write(message);
+			handle:close();
+		end
+		os.exit(1);
+	end
+end
+
+local outFile = options.outFile;
 if not outFile then
-	if sourceFile:sub(-4) == ".lua" then
-		outFile = sourceFile:sub(0, -5) .. ".obfuscated.lua"
+	if options.sourceFile:sub(-4) == ".lua" then
+		outFile = options.sourceFile:sub(0, -5) .. ".obfuscated.lua";
 	else
-		outFile = sourceFile .. ".obfuscated.lua"
+		outFile = options.sourceFile .. ".obfuscated.lua";
 	end
 end
 
-local source = table.concat(lines_from(sourceFile), "\n")
-local pipeline = Prometheus.Pipeline:fromConfig(config)
-local out = pipeline:apply(source, sourceFile)
-Prometheus.Logger:info(string.format('Writing output to "%s"', outFile))
+local source = table.concat(lines_from(options.sourceFile), "\n");
+local pipeline = Prometheus.Pipeline:fromConfig(config);
+local out = pipeline:apply(source, options.sourceFile);
+Prometheus.Logger:info(string.format('Writing output to "%s"', outFile));
 
--- Write Output
-local handle = io.open(outFile, "w")
-handle:write(out)
-handle:close()
+local handle = io.open(outFile, "w");
+if not handle then
+	Prometheus.Logger:error(string.format('Could not write output file "%s"', outFile));
+end
+handle:write(out);
+handle:close();

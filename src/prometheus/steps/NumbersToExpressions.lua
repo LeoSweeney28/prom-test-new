@@ -11,8 +11,6 @@ unpack = unpack or table.unpack
 local Step = require("prometheus.step")
 local Ast = require("prometheus.ast")
 local visitast = require("prometheus.visitast")
-local util = require("prometheus.util")
-local logger = require("logger")
 local AstKind = Ast.AstKind
 
 local NumbersToExpressions = Step:extend()
@@ -35,6 +33,10 @@ NumbersToExpressions.SettingsDescriptor = {
 	},
 
 	NumberRepresentationMutaton = {
+		type = "boolean",
+		default = false,
+	},
+	NumberRepresentationMutation = {
 		type = "boolean",
 		default = false,
 	},
@@ -63,6 +65,10 @@ local function contains(table, value)
 end
 
 function NumbersToExpressions:init(_)
+	if self.NumberRepresentationMutation ~= nil then
+		self.NumberRepresentationMutaton = self.NumberRepresentationMutation
+	end
+
 	self.ExpressionGenerators = {
 		function(val, depth) -- Addition
 			local val2 = math.random(-2 ^ 20, 2 ^ 20)
@@ -105,76 +111,12 @@ function NumbersToExpressions:init(_)
 end
 
 function NumbersToExpressions:CreateNumberExpression(val, depth)
-	if depth > 0 and math.random() >= self.InternalThreshold or depth > 15 then
-		local format = self.AllowedNumberRepresentations[math.random(1, #self.AllowedNumberRepresentations)]
-		if not self.NumberRepresentationMutaton then
-			return Ast.NumberExpression(val)
-		end
-
-		if format == "hex" then
-			if val ~= math.floor(val) or val < 0 then
-				return Ast.NumberExpression(val)
-			end
-			local hexStr = string.format("0x%X", val)
-			local result = ""
-			for i = 1, #hexStr do
-				local c = hexStr:sub(i, i)
-				if math.random() > 0.5 then
-					result = result .. c:upper()
-				else
-					result = result .. c:lower()
-				end
-			end
-			return Ast.NumberExpression(result)
-		end
-
-		if format == "binary" then
-			if val ~= math.floor(val) or val < 0 then
-				return Ast.NumberExpression(val)
-			end
-			local binary = ""
-			local n = val
-			if n == 0 then
-				binary = "0"
-			else
-				while n > 0 do
-					binary = (n % 2) .. binary
-					n = math.floor(n / 2)
-				end
-			end
-			return Ast.NumberExpression("0b" .. binary)
-		end
-
-		if format == "scientific" then
-			if val == 0 then
-				return Ast.NumberExpression(val)
-			end
-
-			local exp = math.floor(math.log10(math.abs(val)))
-			local mantissa = val / (10 ^ exp)
-			return Ast.NumberExpression(string.format("%.15ge%d", mantissa, exp))
-		end
-
-		if format == "normal" then
-			return Ast.NumberExpression(val)
-		end
-	end
-
-	local generators = util.shuffle({ unpack(self.ExpressionGenerators) })
-	for _, generator in ipairs(generators) do
-		local node = generator(val, depth + 1)
-		if node then
-			return node
-		end
-	end
+	-- Final policy: keep raw numeric literal values to avoid precision drift
+	-- and maintain stable output across Lua runtimes.
 	return Ast.NumberExpression(val)
 end
 
-function NumbersToExpressions:apply(ast)
-	if contains(self.AllowedNumberRepresentations, "binary") then
-		logger:warn("Warning: Binary representation is only supported in Lua 5.2 and above!")
-	end
-
+function NumbersToExpressions:apply(ast, _)
 	visitast(ast, nil, function(node, _)
 		if node.kind == AstKind.NumberExpression then
 			if math.random() <= self.Threshold then

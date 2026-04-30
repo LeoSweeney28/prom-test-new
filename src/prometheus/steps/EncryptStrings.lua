@@ -108,7 +108,10 @@ do
 		"local floor = math.floor",
 		"local random = math.random",
 		"local remove = table.remove",
+		"local insert = table.insert",
+		"local concat = table.concat",
 		"local char = string.char",
+		"local sbyte = string.byte",
 		"local state_45 = 0",
 		"local state_8 = 2",
 		"local charmap = {}",
@@ -162,11 +165,12 @@ do
 			local len = #str;
 			realStringsLocal[seed] = "";
 			local prevVal = ]] .. tostring(secret_key_8) .. [[;
-			local s = "";
+			local parts = {};
 			for i=1, len, 1 do
-				prevVal = (string.byte(str, i) + get_next_pseudo_random_byte() + prevVal) % 256
-				s = s .. chars[prevVal + 1];
+				prevVal = (sbyte(str, i) + get_next_pseudo_random_byte() + prevVal) % 256
+				insert(parts, chars[prevVal + 1]);
 			end
+			local s = concat(parts);
 			realStringsLocal[seed] = s;
 		end
 		return seed;

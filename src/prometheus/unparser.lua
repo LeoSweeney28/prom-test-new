@@ -31,6 +31,7 @@ local function escapeString(str)
 end
 
 function Unparser:new(settings)
+	settings = settings or {};
 	local luaVersion = settings.LuaVersion or LuaVersion.LuaU;
 	local conventions = Enums.Conventions[luaVersion];
 	local unparser = {
@@ -38,10 +39,10 @@ function Unparser:new(settings)
 		conventions = conventions;
 		identCharsLookup = lookupify(conventions.IdentChars);
 		numberCharsLookup = lookupify(conventions.NumberChars);
-		prettyPrint = settings and settings.PrettyPrint or false;
+		prettyPrint = settings.PrettyPrint or false;
 		notIdentPattern = "[^" .. table.concat(conventions.IdentChars, "") .. "]";
 		numberPattern = "^[" .. table.concat(conventions.NumberChars, "") .. "]";
-		highlight = settings and settings.Highlight or false;
+		highlight = settings.Highlight or false;
 		keywordsLookup = lookupify(conventions.Keywords);
 	}
 
@@ -99,7 +100,7 @@ function Unparser:optionalWhitespace(ws)
 end
 
 function Unparser:whitespace(ws)
-	return self.SPACE or ws;
+	return ws or self.SPACE;
 end
 
 function Unparser:unparse(ast)

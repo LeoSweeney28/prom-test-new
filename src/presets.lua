@@ -77,6 +77,14 @@ return {
 				},
 			},
 			{ Name = "NumbersToExpressions", Settings = {} },
+			{
+				Name = "ControlFlow",
+				Settings = {
+					Treshold = 0.85,
+					OpaquePredicate = true,
+					WrapLayers = 2
+				}
+			},
 			{ Name = "WrapInFunction", Settings = {} },
 		},
 	},
@@ -113,6 +121,14 @@ return {
 				Settings = {
 					NumberRepresentationMutaton = true
 				},
+			},
+			{
+				Name = "ControlFlow",
+				Settings = {
+					Treshold = 0.95,
+					OpaquePredicate = true,
+					WrapLayers = 3
+				}
 			},
 			{ Name = "WrapInFunction", Settings = {} },
 		},
