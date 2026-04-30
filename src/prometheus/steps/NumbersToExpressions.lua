@@ -38,6 +38,10 @@ NumbersToExpressions.SettingsDescriptor = {
 		type = "boolean",
 		default = false,
 	},
+	NumberRepresentationMutation = {
+		type = "boolean",
+		default = false,
+	},
 
 	AllowedNumberRepresentations = {
 		type = "table",
@@ -63,6 +67,10 @@ local function contains(table, value)
 end
 
 function NumbersToExpressions:init(_)
+	if self.NumberRepresentationMutation ~= nil then
+		self.NumberRepresentationMutaton = self.NumberRepresentationMutation
+	end
+
 	self.ExpressionGenerators = {
 		function(val, depth) -- Addition
 			local val2 = math.random(-2 ^ 20, 2 ^ 20)
@@ -105,7 +113,7 @@ function NumbersToExpressions:init(_)
 end
 
 function NumbersToExpressions:CreateNumberExpression(val, depth)
-	if depth > 0 and math.random() >= self.InternalThreshold or depth > 15 then
+	if (depth > 0 and math.random() >= self.InternalThreshold) or depth > 15 then
 		local format = self.AllowedNumberRepresentations[math.random(1, #self.AllowedNumberRepresentations)]
 		if not self.NumberRepresentationMutaton then
 			return Ast.NumberExpression(val)
@@ -149,10 +157,9 @@ function NumbersToExpressions:CreateNumberExpression(val, depth)
 			if val == 0 then
 				return Ast.NumberExpression(val)
 			end
-
-			local exp = math.floor(math.log10(math.abs(val)))
-			local mantissa = val / (10 ^ exp)
-			return Ast.NumberExpression(string.format("%.15ge%d", mantissa, exp))
+			local s = string.format("%.15e", val)
+			s = s:gsub("%.?0+e", "e")
+			return Ast.NumberExpression(s)
 		end
 
 		if format == "normal" then
@@ -170,8 +177,8 @@ function NumbersToExpressions:CreateNumberExpression(val, depth)
 	return Ast.NumberExpression(val)
 end
 
-function NumbersToExpressions:apply(ast)
-	if contains(self.AllowedNumberRepresentations, "binary") then
+function NumbersToExpressions:apply(ast, pipeline)
+	if contains(self.AllowedNumberRepresentations, "binary") and pipeline and pipeline.LuaVersion == "Lua51" then
 		logger:warn("Warning: Binary representation is only supported in Lua 5.2 and above!")
 	end
 

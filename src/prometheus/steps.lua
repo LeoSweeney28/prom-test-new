@@ -13,6 +13,7 @@ return {
 	AntiTamper = require("prometheus.steps.AntiTamper"),
 	EncryptStrings = require("prometheus.steps.EncryptStrings"),
 	NumbersToExpressions = require("prometheus.steps.NumbersToExpressions"),
+	ControlFlow = require("prometheus.steps.ControlFlow"),
 	AddVararg = require("prometheus.steps.AddVararg"),
 	WatermarkCheck = require("prometheus.steps.WatermarkCheck"),
 }
