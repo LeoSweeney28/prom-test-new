@@ -13,7 +13,7 @@ return function(Compiler)
     function Compiler:createBlock()
         local id;
         repeat
-            id = math.random(0, 2^24)
+            id = self:randRange(0, 2^24)
         until not self.usedBlockIds[id];
         self.usedBlockIds[id] = true;
 

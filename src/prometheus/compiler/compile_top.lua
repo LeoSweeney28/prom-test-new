@@ -25,13 +25,7 @@ return function(Compiler)
             AstKind.LocalFunctionDeclaration,
         }
 
-        local functionLookup = lookupify{
-            AstKind.FunctionDeclaration,
-            AstKind.LocalFunctionDeclaration,
-            AstKind.FunctionLiteralExpression,
-            AstKind.TopNode,
-        }
-        visitast(node, function(node, data)
+                visitast(node, function(node, data)
             if node.kind == AstKind.Block then
                 node.scope.__depth = data.functionData.depth;
             end
@@ -164,7 +158,7 @@ return function(Compiler)
                 Ast.TableConstructorExpression(upvalueExpressions)
             });
         else
-            local varScope, var = self:getCreateClosureVar(#node.args + math.random(0, 5));
+            local varScope, var = self:getCreateClosureVar(#node.args + self:randRange(0, 5));
             scope:addReferenceToHigherScope(varScope, var);
             retrieveExpression = Ast.FunctionCallExpression(Ast.VariableExpression(varScope, var), {
                 Ast.NumberExpression(block.id),
