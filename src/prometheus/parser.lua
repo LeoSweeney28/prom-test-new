@@ -99,8 +99,6 @@ local function get(self)
 end
 
 local function is(self, kind, sourceOrN, n)
-	local token = peek(self, n);
-
 	local source = nil;
 	if(type(sourceOrN) == "string") then
 		source = sourceOrN;
@@ -108,6 +106,7 @@ local function is(self, kind, sourceOrN, n)
 		n = sourceOrN;
 	end
 	n = n or 0;
+	local token = peek(self, n);
 
 	if(token.kind == kind) then
 		if(source == nil or token.source == source) then
@@ -132,7 +131,11 @@ local function expect(self, kind, source)
 	end
 
 	local token = peek(self);
-	if self.disableLog then error() end
+	if self.disableLog then
+		error(generateError(self, source
+			and string.format("unexpected token <%s> \"%s\", expected <%s> \"%s\"", token.kind, token.source, kind, source)
+			or string.format("unexpected token <%s> \"%s\", expected <%s>", token.kind, token.source, kind)));
+	end
 	if(source) then
 		logger:error(generateError(self, string.format("unexpected token <%s> \"%s\", expected <%s> \"%s\"", token.kind, token.source, kind, source)));
 	else
