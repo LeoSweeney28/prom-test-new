@@ -57,7 +57,8 @@ local function generateSanityCheck()
 			addCode("            valid = %s;\n", tostring(sanityCheckAnswers[1]))
 		elseif i == 1 then
 			addCode("        elseif i == 1 then\n")
-			addCode("            if valid == %s then\n", tostring(sanityCheckAnswers[1]))
+			addCode("            if valid ~= %s then\n", tostring(sanityCheckAnswers[1]))
+			addCode("                while true do end\n")
 			addCode("            end\n")
 		else
 			addCode("        elseif i == %d then\n", i)

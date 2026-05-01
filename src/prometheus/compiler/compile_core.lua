@@ -19,7 +19,7 @@ return function(Compiler)
             handler(self, statement, funcDepth);
             return;
         end
-        logger:error(string.format("%s is not a compileable statement!", statement.kind));
+        logger:error(string.format("%s is not a compilable statement!", statement.kind));
     end
 
     function Compiler:compileExpression(expression, funcDepth, numReturns)
@@ -27,6 +27,6 @@ return function(Compiler)
         if handler then
             return handler(self, expression, funcDepth, numReturns);
         end
-        logger:error(string.format("%s is not an compliable expression!", expression.kind));
+        logger:error(string.format("%s is not a compilable expression!", expression.kind));
     end
 end
