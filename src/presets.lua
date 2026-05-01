@@ -77,18 +77,14 @@ return {
 				},
 			},
 			{ Name = "NumbersToExpressions", Settings = {} },
-			{
-				Name = "ControlFlow",
-				Settings = {
-					Treshold = 0.9,
-					OpaquePredicate = true
-				}
-			},
+			{Name = "ControlFlow", Settings = {}},
 			{ Name = "WrapInFunction", Settings = {} },
+			{ Name = "ProxifyLocals", Settings = {} },
+
 		},
 	},
 
-	-- Strong obfuscation, high performance loss.
+	-- Strong obfuscation, high performance losss.
 	["Strong"] = {
 		LuaVersion = "Lua51",
 		VarNamePrefix = "",
@@ -129,6 +125,84 @@ return {
 				}
 			},
 			{ Name = "WrapInFunction", Settings = {} },
+		},
+	},
+
+	-- Balanced obfuscation profile with moderate overhead.
+	["Balanced"] = {
+		LuaVersion = "Lua51",
+		VarNamePrefix = "",
+		NameGenerator = "MangledShuffled",
+		PrettyPrint = false,
+		Seed = 0,
+		Steps = {
+			{ Name = "EncryptStrings", Settings = {} },
+			{
+				Name = "AntiTamper",
+				Settings = {
+					UseDebug = false,
+				},
+			},
+			{ Name = "Vmify", Settings = {} },
+			{
+				Name = "ConstantArray",
+				Settings = {
+					Treshold = 0.85,
+					StringsOnly = true,
+					Shuffle = true,
+					Rotate = true,
+					LocalWrapperTreshold = 0.15,
+					LocalWrapperCount = 1,
+				},
+			},
+			{
+				Name = "ControlFlow",
+				Settings = {
+					Treshold = 0.25,
+					OpaquePredicate = true,
+					MaxStatementsPerBlock = 80,
+				},
+			},
+			{ Name = "WrapInFunction", Settings = {} },
+		},
+	},
+
+	-- Hardened profile focused on reverse-engineering resistance.
+	["Hardened"] = {
+		LuaVersion = "Lua51",
+		VarNamePrefix = "",
+		NameGenerator = "MangledShuffled",
+		PrettyPrint = false,
+		Seed = 0,
+		Steps = {
+			{ Name = "EncryptStrings", Settings = {} },
+			{
+				Name = "AntiTamper",
+				Settings = {
+					UseDebug = false,
+				},
+			},
+			{ Name = "Vmify", Settings = {} },
+			{
+				Name = "ConstantArray",
+				Settings = {
+					Treshold = 1,
+					StringsOnly = true,
+					Shuffle = true,
+					Rotate = true,
+					LocalWrapperTreshold = 0.35,
+					LocalWrapperCount = 2,
+				},
+			},
+			{
+				Name = "ControlFlow",
+				Settings = {
+					Treshold = 0.45,
+					OpaquePredicate = true,
+					MaxStatementsPerBlock = 120,
+				},
+			},
+			{ Name = "WrapInFunction", Settings = { Iterations = 2 } },
 		},
 	},
 }

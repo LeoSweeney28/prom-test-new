@@ -169,3 +169,6 @@ else
 	end
 	return -1;
 end
+
+print("Tests Completed!");
+

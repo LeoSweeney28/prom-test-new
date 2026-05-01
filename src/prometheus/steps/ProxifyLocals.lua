@@ -85,19 +85,29 @@ local MetatableExpressions = {
 
 function ProxifyLocals:init(_) end
 
-local function generateLocalMetatableInfo(pipeline)
+function ProxifyLocals:_range(minValue, maxValue)
+	if self._rng and type(self._rng.range) == "function" then
+		return self._rng:range(minValue, maxValue)
+	end
+	if maxValue == nil then
+		return math.random(minValue)
+	end
+	return math.random(minValue, maxValue)
+end
+
+local function generateLocalMetatableInfo(pipeline, randRange)
     local usedOps = {};
     local info = {};
     for i, v in ipairs({"setValue", "getValue", "index"}) do
         local rop;
         repeat
-            rop = MetatableExpressions[math.random(#MetatableExpressions)];
+            rop = MetatableExpressions[randRange(1, #MetatableExpressions)];
         until not usedOps[rop];
         usedOps[rop] = true;
         info[v] = rop;
     end
 
-    info.valueName = callNameGenerator(pipeline.namegenerator, math.random(1, 4096));
+    info.valueName = callNameGenerator(pipeline.namegenerator, randRange(1, 4096));
 
     return info;
 end
@@ -163,6 +173,14 @@ function ProxifyLocals:CreateAssignmentExpression(info, expr, parentScope)
 end
 
 function ProxifyLocals:apply(ast, pipeline)
+    self._rng = nil;
+    if pipeline and type(pipeline.getRandom) == "function" then
+        self._rng = pipeline:getRandom();
+        if self._rng and type(self._rng.derive) == "function" then
+            self._rng = self._rng:derive("ProxifyLocals");
+        end
+    end
+
     local localMetatableInfos = {};
     local function getLocalMetatableInfo(scope, id)
         -- Global Variables should not be transformed
@@ -176,7 +194,9 @@ function ProxifyLocals:apply(ast, pipeline)
             end
             return localMetatableInfos[scope][id];
         end
-        local localMetatableInfo = generateLocalMetatableInfo(pipeline);
+        local localMetatableInfo = generateLocalMetatableInfo(pipeline, function(minValue, maxValue)
+			return self:_range(minValue, maxValue);
+		end);
         localMetatableInfos[scope][id] = localMetatableInfo;
         return localMetatableInfo;
     end
@@ -261,13 +281,13 @@ function ProxifyLocals:apply(ast, pipeline)
             if localMetatableInfo then
                 local literal;
                 if self.LiteralType == "dictionary" then
-                    literal = RandomLiterals.Dictionary();
+                    literal = RandomLiterals.Dictionary(pipeline, self._rng);
                 elseif self.LiteralType == "number" then
-                    literal = RandomLiterals.Number();
+                    literal = RandomLiterals.Number(pipeline, self._rng);
                 elseif self.LiteralType == "string" then
-                    literal = RandomLiterals.String(pipeline);
+                    literal = RandomLiterals.String(pipeline, self._rng);
                 else
-                    literal = RandomLiterals.Any(pipeline);
+                    literal = RandomLiterals.Any(pipeline, self._rng);
                 end
                 return localMetatableInfo.getValue.constructor(node, literal);
             end
@@ -306,6 +326,8 @@ function ProxifyLocals:apply(ast, pipeline)
     table.insert(ast.body.statements, 1, Ast.LocalVariableDeclaration(self.setMetatableVarScope, {self.setMetatableVarId}, {
         Ast.VariableExpression(self.setMetatableVarScope:resolveGlobal("setmetatable"))
     }));
+
+	self._rng = nil;
 end
 
 return ProxifyLocals;

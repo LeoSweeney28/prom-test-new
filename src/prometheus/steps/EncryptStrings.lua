@@ -20,14 +20,34 @@ EncryptStrings.SettingsDescriptor = {}
 
 function EncryptStrings:init(_) end
 
+local function randomRange(rng, minValue, maxValue)
+	if rng and type(rng.range) == "function" then
+		return rng:range(minValue, maxValue)
+	end
+	if maxValue == nil then
+		return math.random(minValue)
+	end
+	return math.random(minValue, maxValue)
+end
 
-function EncryptStrings:CreateEncryptionService()
+local function randomShuffle(rng, list)
+	local copy = {}
+	for i = 1, #list do
+		copy[i] = list[i]
+	end
+	if rng and type(rng.shuffle) == "function" then
+		return rng:shuffle(copy)
+	end
+	return util.shuffle(copy)
+end
+
+function EncryptStrings:CreateEncryptionService(rng)
 	local usedSeeds = {};
 
-	local secret_key_6 = math.random(0, 63) -- 6-bit  arbitrary integer (0..63)
-	local secret_key_7 = math.random(0, 127) -- 7-bit  arbitrary integer (0..127)
-	local secret_key_44 = math.random(0, 17592186044415) -- 44-bit arbitrary integer (0..17592186044415)
-	local secret_key_8 = math.random(0, 255); -- 8-bit  arbitrary integer (0..255)
+	local secret_key_6 = randomRange(rng, 0, 63) -- 6-bit  arbitrary integer (0..63)
+	local secret_key_7 = randomRange(rng, 0, 127) -- 7-bit  arbitrary integer (0..127)
+	local secret_key_44 = randomRange(rng, 0, 17592186044415) -- 44-bit arbitrary integer (0..17592186044415)
+	local secret_key_8 = randomRange(rng, 0, 255); -- 8-bit  arbitrary integer (0..255)
 
 	local floor = math.floor
 
@@ -56,7 +76,7 @@ function EncryptStrings:CreateEncryptionService()
 	local function gen_seed()
 		local seed;
 		repeat
-			seed = math.random(0, 35184372088832);
+			seed = randomRange(rng, 0, 35184372088832);
 		until not usedSeeds[seed];
 		usedSeeds[seed] = true;
 		return seed;
@@ -104,7 +124,7 @@ function EncryptStrings:CreateEncryptionService()
     local function genCode()
         local code = [[
 do
-	]] .. table.concat(util.shuffle{
+	]] .. table.concat(randomShuffle(rng, {
 		"local floor = math.floor",
 		"local random = math.random",
 		"local remove = table.remove",
@@ -116,7 +136,7 @@ do
 		"local state_8 = 2",
 		"local charmap = {}",
 		"local nums = {}"
-	}, "\n") .. [[
+	}), "\n") .. [[
 	for i = 1, 256 do
 		nums[i] = i;
 	end
@@ -191,7 +211,15 @@ end]]
 end
 
 function EncryptStrings:apply(ast, _)
-    local Encryptor = self:CreateEncryptionService();
+	local rng = nil;
+	if _ and type(_.getRandom) == "function" then
+		rng = _:getRandom();
+		if rng and type(rng.derive) == "function" then
+			rng = rng:derive("EncryptStrings");
+		end
+	end
+
+    local Encryptor = self:CreateEncryptionService(rng);
 
 	local code = Encryptor.genCode();
 	local newAst = Parser:new({ LuaVersion = Enums.LuaVersion.Lua51 }):parse(code);

@@ -16,9 +16,20 @@ Vmify.SettingsDescriptor = {}
 
 function Vmify:init(_) end
 
-function Vmify:apply(ast)
+function Vmify:apply(ast, pipeline)
+    local compilerSeed;
+    if pipeline and type(pipeline.getRandom) == "function" then
+        local rng = pipeline:getRandom();
+        if rng and type(rng.derive) == "function" then
+            rng = rng:derive("Vmify");
+        end
+        if rng and type(rng.range) == "function" then
+            compilerSeed = rng:range(1, 2147483646);
+        end
+    end
+
     -- Create Compiler
-	local compiler = Compiler:new();
+    local compiler = Compiler:new({ Seed = compilerSeed; });
 
     -- Compile the Script into a bytecode vm
     return compiler:compile(ast);

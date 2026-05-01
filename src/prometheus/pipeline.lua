@@ -9,6 +9,7 @@ local Enums = require("prometheus.enums");
 local util = require("prometheus.util");
 local Parser = require("prometheus.parser");
 local Unparser = require("prometheus.unparser");
+local Random = require("prometheus.random");
 local logger = require("logger");
 
 local NameGenerators = require("prometheus.namegenerators");
@@ -87,6 +88,7 @@ function Pipeline:new(settings)
 		namegenerator = Pipeline.NameGenerators.MangledShuffled;
 		conventions = conventions;
 		steps = {};
+		random = nil;
 	}
 
 	setmetatable(pipeline, self);
@@ -177,49 +179,15 @@ function Pipeline:apply(code, filename)
 	filename = filename or "Anonymous Script";
 	logger:info(string.format("Applying Obfuscation Pipeline to %s ...", filename));
 
-	if(self.Seed and self.Seed > 0) then
-		math.randomseed(self.Seed);
+	local seed = (self.Seed and self.Seed > 0) and self.Seed or nil;
+	self.random = Random:new(seed);
+	self.random:seedGlobalMathRandom();
+	if seed then
+		logger:info("Using deterministic build seed from config");
+	elseif self.random.SeedSource == "openssl" then
+		logger:info("Using OpenSSL-derived entropy seed");
 	else
-		local success, seed = pcall(function()
-			local proc = io.popen("openssl rand -hex 12");
-			if not proc then
-				error("failed to create openssl process");
-			end
-			local seedStr = (proc:read("*a") or ""):gsub("\n", "");
-			proc:close();
-			if #seedStr == 0 then
-				error("empty openssl output");
-			end
-
-			local seedNum = 0;
-			for i = 1, #seedStr do
-				local byte = seedStr:byte(i);
-				local digit;
-				if byte >= 48 and byte <= 57 then
-					digit = byte - 48;
-				elseif byte >= 65 and byte <= 70 then
-					digit = byte - 55;
-				elseif byte >= 97 and byte <= 102 then
-					digit = byte - 87;
-				else
-					error("invalid hex byte in openssl output");
-				end
-				seedNum = seedNum * 16 + digit;
-			end
-
-			if _VERSION == "Lua 5.1" and not jit then
-				seedNum = seedNum % 9.007199254741e+15;
-			end
-
-			return seedNum;
-		end)
-
-		if success then
-			math.randomseed(seed)
-		else
-			logger:warn("OpenSSL is unavailable. Falling back to unix time.");
-			math.randomseed(os.time())
-		end
+		logger:warn("OpenSSL entropy unavailable. Using fallback entropy mixer.");
 	end
 
 	logger:info("Parsing ...");
@@ -290,6 +258,14 @@ function Pipeline:renameVariables(ast)
 	});
 
 	logger:info(string.format("Renaming Variables Done in %.2f seconds", gettime() - startTime));
+end
+
+function Pipeline:getRandom()
+	if not self.random then
+		local seed = (self.Seed and self.Seed > 0) and self.Seed or nil;
+		self.random = Random:new(seed);
+	end
+	return self.random;
 end
 
 return Pipeline;

@@ -8,21 +8,31 @@ local Ast = require("prometheus.ast")
 local utils = require("prometheus.util")
 local charset = utils.chararray("qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890")
 
-local function randomString(wordsOrLen)
+local function randomRange(rng, minValue, maxValue)
+	if rng and type(rng.range) == "function" then
+		return rng:range(minValue, maxValue)
+	end
+	if maxValue == nil then
+		return math.random(minValue)
+	end
+	return math.random(minValue, maxValue)
+end
+
+local function randomString(wordsOrLen, rng)
 	if type(wordsOrLen) == "table" then
-		return wordsOrLen[math.random(1, #wordsOrLen)];
+		return wordsOrLen[randomRange(rng, 1, #wordsOrLen)];
 	end
 
-	wordsOrLen = wordsOrLen or math.random(2, 15);
+	wordsOrLen = wordsOrLen or randomRange(rng, 2, 15);
 	if wordsOrLen > 0 then
-		return randomString(wordsOrLen - 1) .. charset[math.random(1, #charset)]
+		return randomString(wordsOrLen - 1, rng) .. charset[randomRange(rng, 1, #charset)]
 	else
 		return ""
 	end
 end
 
-local function randomStringNode(wordsOrLen)
-	return Ast.StringExpression(randomString(wordsOrLen))
+local function randomStringNode(wordsOrLen, rng)
+	return Ast.StringExpression(randomString(wordsOrLen, rng))
 end
 
 return {

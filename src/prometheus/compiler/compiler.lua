@@ -21,7 +21,8 @@ local compileCoreModule = require("prometheus.compiler.compile_core");
 
 local Compiler = {};
 
-function Compiler:new()
+function Compiler:new(options)
+	options = options or {};
     local compiler = {
         blocks = {};
         registers = {};
@@ -52,6 +53,8 @@ function Compiler:new()
             AstKind.ModExpression,
             AstKind.PowExpression,
         };
+
+		_seedOverride = tonumber(options.Seed);
     };
 
     setmetatable(compiler, self);
@@ -82,11 +85,20 @@ function Compiler:popRegisterUsageInfo()
 end
 
 function Compiler:_initRngSeed()
+	if self._seedOverride and self._seedOverride > 0 then
+		local seed = math.floor(self._seedOverride) % 0x80000000
+		if seed == 0 then
+			seed = 0x6D2B79F5
+		end
+		self._rngState = seed
+		return
+	end
+
     local t = tostring({}):match("0x(%x+)") or "0"
     local addr = tonumber(t, 16) or 0
     local clock = math.floor((os.clock() or 0) * 1000000)
     local mem = collectgarbage("count") or 0
-    local seed = (addr + (clock * 33) + math.floor(mem * 1000) + math.floor((self.upvalsProxyLenReturn or 0) * 17)) % 0x80000000
+    local seed = (addr + (clock * 33) + math.floor(mem * 1000)) % 0x80000000
     if seed == 0 then
         seed = 0x6D2B79F5
     end
@@ -128,8 +140,8 @@ function Compiler:compile(ast)
     self.upvalVars = {};
     self.registerUsageStack = {};
 
-    self.upvalsProxyLenReturn = math.random(-2^22, 2^22);
     self:_initRngSeed();
+	self.upvalsProxyLenReturn = self:randRange(-2^22, 2^22);
 
     local newGlobalScope = Scope:newGlobal();
     local psc = Scope:new(newGlobalScope, nil);

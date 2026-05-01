@@ -1,0 +1,34 @@
+Obfuscation error:
+.\src\logger.lua:56: Step "Proxify Locals" failed: .\src\prometheus\steps\ProxifyLocals.lua:258: attempt to index field 'scope' (a nil value)
+stack traceback:
+	.\src\prometheus\steps\ProxifyLocals.lua:258: in function 'previsit'
+	.\src\prometheus\visitast.lua:92: in function 'visitStatement'
+	.\src\prometheus\visitast.lua:73: in function 'visitBlock'
+	.\src\prometheus\visitast.lua:148: in function 'visitStatement'
+	.\src\prometheus\visitast.lua:73: in function 'visitBlock'
+	.\src\prometheus\visitast.lua:145: in function 'visitStatement'
+	.\src\prometheus\visitast.lua:73: in function 'visitBlock'
+	.\src\prometheus\visitast.lua:151: in function 'visitStatement'
+	.\src\prometheus\visitast.lua:73: in function 'visitBlock'
+	.\src\prometheus\visitast.lua:145: in function 'visitStatement'
+	.\src\prometheus\visitast.lua:73: in function 'visitBlock'
+	...
+	.\src\prometheus\visitast.lua:73: in function 'visitBlock'
+	.\src\prometheus\visitast.lua:35: in function 'visitast'
+	.\src\prometheus\steps\ProxifyLocals.lua:227: in function <.\src\prometheus\steps\ProxifyLocals.lua:175>
+	(tail call): ?
+	[C]: in function 'xpcall'
+	.\src\prometheus\pipeline.lua:202: in function <.\src\prometheus\pipeline.lua:173>
+	(tail call): ?
+	[C]: in function 'xpcall'
+	tests_verbose.lua:358: in main chunk
+	[C]: ?
+stack traceback:
+	[C]: in function 'error'
+	.\src\logger.lua:56: in function 'errorCallback'
+	.\src\logger.lua:59: in function 'error'
+	.\src\prometheus\pipeline.lua:206: in function <.\src\prometheus\pipeline.lua:173>
+	(tail call): ?
+	[C]: in function 'xpcall'
+	tests_verbose.lua:358: in main chunk
+	[C]: ?

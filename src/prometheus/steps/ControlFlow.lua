@@ -42,18 +42,35 @@ local EXCLUDED = {
 
 function ControlFlow:init() end
 
+function ControlFlow:_randRange(minValue, maxValue)
+	if self._rng and type(self._rng.range) == "function" then
+		return self._rng:range(minValue, maxValue)
+	end
+	if maxValue == nil then
+		return math.random(minValue)
+	end
+	return math.random(minValue, maxValue)
+end
+
+function ControlFlow:_randFloat()
+	if self._rng and type(self._rng.range) == "function" then
+		return self._rng:range()
+	end
+	return math.random()
+end
+
 local function canWrap(statement)
 	return statement and not EXCLUDED[statement.kind]
 end
 
 -- More diverse opaque predicates
 function ControlFlow:createOpaqueTrueExpression()
-	local mode = math.random(1, 3)
+	local mode = self:_randRange(1, 3)
 
 	if mode == 1 then
 		-- arithmetic identity
-		local a = math.random(1000, 9000)
-		local b = math.random(20, 80)
+		local a = self:_randRange(1000, 9000)
+		local b = self:_randRange(20, 80)
 		return Ast.EqualsExpression(
 			Ast.SubExpression(
 				Ast.NumberExpression(a * b),
@@ -66,8 +83,8 @@ function ControlFlow:createOpaqueTrueExpression()
 
 	elseif mode == 2 then
 		-- modulo invariant
-		local a = math.random(1000, 5000)
-		local b = math.random(2, 50)
+		local a = self:_randRange(1000, 5000)
+		local b = self:_randRange(2, 50)
 		return Ast.EqualsExpression(
 			Ast.ModExpression(
 				Ast.NumberExpression(a * b),
@@ -93,8 +110,8 @@ end
 -- Dead false predicate
 function ControlFlow:createOpaqueFalseExpression()
 	return Ast.EqualsExpression(
-		Ast.NumberExpression(math.random(1, 1000)),
-		Ast.NumberExpression(math.random(1001, 2000)),
+		Ast.NumberExpression(self:_randRange(1, 1000)),
+		Ast.NumberExpression(self:_randRange(1001, 2000)),
 		false
 	)
 end
@@ -103,7 +120,7 @@ function ControlFlow:wrapStatement(statement, parentScope)
 	local wrapperScope = Scope:new(parentScope)
 	local innerBlock = Ast.Block({ statement }, wrapperScope)
 
-	local mode = math.random(1, 3)
+	local mode = self:_randRange(1, 3)
 
 	-- Mode 1: Simple if
 	if mode == 1 and self.OpaquePredicate then
@@ -170,7 +187,7 @@ function ControlFlow:processBlock(block)
 		-- wrapping logic
 		if count < self.MaxStatementsPerBlock
 			and canWrap(stmt)
-			and math.random() <= self.Treshold then
+			and self:_randFloat() <= self.Treshold then
 
 			stmts[i] = self:wrapStatement(stmt, block.scope)
 			count = count + 1
@@ -178,10 +195,19 @@ function ControlFlow:processBlock(block)
 	end
 end
 
-function ControlFlow:apply(ast)
+function ControlFlow:apply(ast, pipeline)
+	self._rng = nil
+	if pipeline and type(pipeline.getRandom) == "function" then
+		self._rng = pipeline:getRandom()
+		if self._rng and type(self._rng.derive) == "function" then
+			self._rng = self._rng:derive("ControlFlow")
+		end
+	end
+
 	if ast and ast.body then
 		self:processBlock(ast.body)
 	end
+	self._rng = nil
 	return ast
 end
 

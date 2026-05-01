@@ -95,14 +95,6 @@ ConstantArray.SettingsDescriptor = {
 }
 
 local prefix_0, prefix_1;
-local function initPrefixes()
-	local charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@£$%^&*()_+-=[]{}|:;<>,./?";
-	repeat
-		local a, b = math.random(1, #charset), math.random(1, #charset);
-		prefix_0 = charset:sub(a, a);
-		prefix_1 = charset:sub(b, b);
-	until prefix_0 ~= prefix_1
-end
 
 local function callNameGenerator(generatorFunction, ...)
 	if(type(generatorFunction) == "table") then
@@ -112,6 +104,47 @@ local function callNameGenerator(generatorFunction, ...)
 end
 
 function ConstantArray:init(_) end
+
+function ConstantArray:_range(minValue, maxValue)
+	if self._rng and type(self._rng.range) == "function" then
+		return self._rng:range(minValue, maxValue);
+	end
+	if maxValue == nil then
+		return math.random(minValue);
+	end
+	return math.random(minValue, maxValue);
+end
+
+function ConstantArray:_float()
+	if self._rng and type(self._rng.range) == "function" then
+		return self._rng:range();
+	end
+	return math.random();
+end
+
+function ConstantArray:_chance(probability)
+	return self:_float() <= probability;
+end
+
+function ConstantArray:_shuffle(list)
+	local copy = {};
+	for i = 1, #list do
+		copy[i] = list[i];
+	end
+	if self._rng and type(self._rng.shuffle) == "function" then
+		return self._rng:shuffle(copy);
+	end
+	return util.shuffle(copy);
+end
+
+local function initPrefixes(randRange)
+	local charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@£$%^&*()_+-=[]{}|:;<>,./?";
+	repeat
+		local a, b = randRange(1, #charset), randRange(1, #charset);
+		prefix_0 = charset:sub(a, a);
+		prefix_1 = charset:sub(b, b);
+	until prefix_0 ~= prefix_1
+end
 
 function ConstantArray:createArray()
 	local entries = {};
@@ -129,7 +162,7 @@ function ConstantArray:indexing(index, data)
 	local functionData = data and data.functionData or nil;
 	if self.LocalWrapperCount > 0 and functionData and functionData.local_wrappers then
 		local wrappers = functionData.local_wrappers;
-		local wrapper = wrappers[math.random(#wrappers)];
+		local wrapper = wrappers[self:_range(1, #wrappers)];
 
 		local args = {};
 		local ofs = index - self.wrapperOffset - wrapper.offset;
@@ -137,7 +170,7 @@ function ConstantArray:indexing(index, data)
 			if i == wrapper.arg then
 				args[i] = Ast.NumberExpression(ofs);
 			else
-				args[i] = Ast.NumberExpression(math.random(ofs - 1024, ofs + 1024));
+				args[i] = Ast.NumberExpression(self:_range(ofs - 1024, ofs + 1024));
 			end
 		end
 
@@ -225,7 +258,7 @@ end
 function ConstantArray:addDecodeCode(ast)
 	if self.Encoding == "base64" then
 		local base64DecodeCode = [[
-	do ]] .. table.concat(util.shuffle{
+	do ]] .. table.concat(self:_shuffle({
 		"local lookup = LOOKUP_TABLE;",
 		"local len = string.len;",
 		"local sub = string.sub;",
@@ -235,7 +268,7 @@ function ConstantArray:addDecodeCode(ast)
 		"local concat = table.concat;",
 		"local type = type;",
 		"local arr = ARR;",
-	}) .. [[
+	})) .. [[
 		for i = 1, #arr do
 			local data = arr[i];
 			if type(data) == "string" then
@@ -300,7 +333,7 @@ function ConstantArray:addDecodeCode(ast)
 		table.insert(ast.body.statements, 1, forStat);
 	elseif self.Encoding == "base85" then
 		local base85DecodeCode = [[
-	do ]] .. table.concat(util.shuffle{
+	do ]] .. table.concat(self:_shuffle({
 		"local lookup = LOOKUP_TABLE;",
 		"local len = string.len;",
 		"local sub = string.sub;",
@@ -310,7 +343,7 @@ function ConstantArray:addDecodeCode(ast)
 		"local concat = table.concat;",
 		"local type = type;",
 		"local arr = ARR;",
-	}) .. [[
+	})) .. [[
 		for i = 1, #arr do
 			local data = arr[i];
 			if type(data) == "string" then
@@ -389,7 +422,7 @@ function ConstantArray:addDecodeCode(ast)
 		table.insert(ast.body.statements, 1, forStat);
 	elseif self.Encoding == "mixed" then
 		local mixedDecodeCode = [[
-	do ]] .. table.concat(util.shuffle{
+	do ]] .. table.concat(self:_shuffle({
 		"local lookup64 = LOOKUP_TABLE_64;",
 		"local lookup85 = LOOKUP_TABLE_85;",
 		"local len = string.len;",
@@ -400,7 +433,7 @@ function ConstantArray:addDecodeCode(ast)
 		"local concat = table.concat;",
 		"local type = type;",
 		"local arr = ARR;",
-	}) .. [[
+	})) .. [[
 		for i = 1, #arr do
 			local data = arr[i];
 			if type(data) == "string" then
@@ -527,7 +560,7 @@ function ConstantArray:createBase64Lookup()
 		table.insert(entries, Ast.KeyedTableEntry(Ast.StringExpression(char), Ast.NumberExpression(i)));
 		i = i + 1;
 	end
-	util.shuffle(entries);
+	entries = self:_shuffle(entries);
 	return Ast.TableConstructorExpression(entries);
 end
 
@@ -538,7 +571,7 @@ function ConstantArray:createBase85Lookup()
 		table.insert(entries, Ast.KeyedTableEntry(Ast.StringExpression(char), Ast.NumberExpression(i)));
 		i = i + 1;
 	end
-	util.shuffle(entries);
+	entries = self:_shuffle(entries);
 	return Ast.TableConstructorExpression(entries);
 end
 
@@ -579,7 +612,7 @@ function ConstantArray:encode(str)
 
 		return table.concat(result);
 	elseif self.Encoding == "mixed" then
-		if math.random() < 0.5 then
+		if self:_float() < 0.5 then
 			local encoded = ((str:gsub('.', function(x)
 				local r,b='',x:byte()
 				for i=8,1,-1 do r=r..(b%2^i-b%2^(i-1)>0 and '1' or '0') end
@@ -623,18 +656,28 @@ function ConstantArray:encode(str)
 end
 
 function ConstantArray:apply(ast, pipeline)
-	initPrefixes();
+	self._rng = nil;
+	if pipeline and type(pipeline.getRandom) == "function" then
+		self._rng = pipeline:getRandom();
+		if self._rng and type(self._rng.derive) == "function" then
+			self._rng = self._rng:derive("ConstantArray");
+		end
+	end
+
+	initPrefixes(function(minValue, maxValue)
+		return self:_range(minValue, maxValue);
+	end);
 	self.rootScope = ast.body.scope;
 	self.arrId = self.rootScope:addVariable();
 
-	self.base64chars = table.concat(util.shuffle{
+	self.base64chars = table.concat(self:_shuffle({
 		"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
 		"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
 		"0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
 		"+", "/",
-	});
+	}));
 
-	self.base85chars = table.concat(util.shuffle{
+	self.base85chars = table.concat(self:_shuffle({
 		"!", "\"", "#", "$", "%", "&", "'", "(", ")", "*", "+", ",", "-", ".", "/",
 		"0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
 		":", ";", "<", "=", ">", "?", "@",
@@ -643,7 +686,7 @@ function ConstantArray:apply(ast, pipeline)
 		"[", "\\", "]", "^", "_", "`",
 		"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o",
 		"p", "q", "r", "s", "t", "u",
-	});
+	}));
 
 	self.constants = {};
 	self.lookup = {};
@@ -651,7 +694,7 @@ function ConstantArray:apply(ast, pipeline)
 	-- Extract Constants
 	visitast(ast, nil, function(node, data)
 		-- Apply only to some nodes
-		if math.random() <= self.Treshold then
+		if self:_chance(self.Treshold) then
 			node.__apply_constant_array = true;
 			if node.kind == AstKind.StringExpression then
 				self:addConstant(node.value);
@@ -667,7 +710,7 @@ function ConstantArray:apply(ast, pipeline)
 
 	-- Shuffle Array
 	if self.Shuffle then
-		self.constants = util.shuffle(self.constants);
+		self.constants = self:_shuffle(self.constants);
 		self.lookup = {};
 		for i, v in ipairs(self.constants) do
 			self.lookup[v] = i;
@@ -675,12 +718,12 @@ function ConstantArray:apply(ast, pipeline)
 	end
 
 	-- Set Wrapper Function Offset
-	self.wrapperOffset = math.random(-self.MaxWrapperOffset, self.MaxWrapperOffset);
+	self.wrapperOffset = self:_range(-self.MaxWrapperOffset, self.MaxWrapperOffset);
 	self.wrapperId = self.rootScope:addVariable();
 
 	visitast(ast, function(node, data)
 		-- Add Local Wrapper Functions
-		if self.LocalWrapperCount > 0 and node.kind == AstKind.Block and node.isFunctionBlock and math.random() <= self.LocalWrapperTreshold then
+		if self.LocalWrapperCount > 0 and node.kind == AstKind.Block and node.isFunctionBlock and self:_chance(self.LocalWrapperTreshold) then
 			local id = node.scope:addVariable()
 			data.functionData.local_wrappers = {
 				id = id;
@@ -690,12 +733,12 @@ function ConstantArray:apply(ast, pipeline)
 			for i = 1, self.LocalWrapperCount, 1 do
 				local name;
 				repeat
-					name = callNameGenerator(pipeline.namegenerator, math.random(1, self.LocalWrapperArgCount * 16));
+					name = callNameGenerator(pipeline.namegenerator, self:_range(1, self.LocalWrapperArgCount * 16));
 				until not nameLookup[name];
 				nameLookup[name] = true;
 
-				local offset = math.random(-self.MaxWrapperOffset, self.MaxWrapperOffset);
-				local argPos = math.random(1, self.LocalWrapperArgCount);
+				local offset = self:_range(-self.MaxWrapperOffset, self.MaxWrapperOffset);
+				local argPos = self:_range(1, self.LocalWrapperArgCount);
 
 				data.functionData.local_wrappers[i] = {
 					arg = argPos,
@@ -782,7 +825,7 @@ function ConstantArray:apply(ast, pipeline)
 
 	self:addDecodeCode(ast);
 
-	local steps = util.shuffle({
+	local steps = self:_shuffle({
 		-- Add Wrapper Function Code
 		function()
 			local funcScope = Scope:new(self.rootScope);
@@ -819,7 +862,7 @@ function ConstantArray:apply(ast, pipeline)
 		-- Rotate Array and Add unrotate code
 		function()
 			if self.Rotate and #self.constants > 1 then
-				local shift = math.random(1, #self.constants - 1);
+				local shift = self:_range(1, #self.constants - 1);
 
 				rotate(self.constants, -shift);
 				self:addRotateCode(ast, shift);
@@ -839,6 +882,7 @@ function ConstantArray:apply(ast, pipeline)
 
 	self.constants = nil;
 	self.lookup = nil;
+	self._rng = nil;
 end
 
 return ConstantArray;
