@@ -225,7 +225,7 @@ return function(Compiler)
             return Ast.AssignmentStatement({Ast.AssignmentVariable(self.containerFuncScope, self.posVar)}, {v});
         end
         scope:addReferenceToHigherScope(self.containerFuncScope, self.posVar);
-        return Ast.AssignmentStatement({Ast.AssignmentVariable(self.containerFuncScope, self.posVar)}, {Ast.NumberExpression(val) or Ast.NilExpression()});
+        return Ast.AssignmentStatement({Ast.AssignmentVariable(self.containerFuncScope, self.posVar)}, {Ast.NumberExpression(val)});
     end
 
     function Compiler:setReturn(scope, val)

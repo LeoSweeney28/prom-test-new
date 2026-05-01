@@ -98,7 +98,8 @@ function Compiler:_initRngSeed()
     local addr = tonumber(t, 16) or 0
     local clock = math.floor((os.clock() or 0) * 1000000)
     local mem = collectgarbage("count") or 0
-    local seed = (addr + (clock * 33) + math.floor(mem * 1000)) % 0x80000000
+    local time = os.time() or 0
+    local seed = (addr + (clock * 33) + math.floor(mem * 1000) + time * 1664525) % 0x80000000
     if seed == 0 then
         seed = 0x6D2B79F5
     end

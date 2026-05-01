@@ -758,7 +758,9 @@ function ConstantArray:apply(ast, pipeline)
 				return self:getConstant(node.value, data);
 			elseif not self.StringsOnly then
 				if node.isConstant then
-					return node.value ~= nil and self:getConstant(node.value, data);
+					if node.value ~= nil then
+						return self:getConstant(node.value, data);
+					end
 				end
 			end
 			node.__apply_constant_array = nil;

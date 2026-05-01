@@ -313,9 +313,11 @@ function Scope:renameVariables(settings)
 			if(not self.skipIdLookup[id] and (self.referenceCounts[id] or 0) >= 0) then
 				local name;
 				repeat
-					name = prefix .. settings.generateName(i, self, originalName);
-					if name == nil then
+					local generated = settings.generateName(i, self, originalName);
+					if generated == nil then
 						name = originalName;
+					else
+						name = prefix .. generated;
 					end
 					i = i + 1;
 				until not forbiddenNamesLookup[name];

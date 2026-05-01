@@ -24,11 +24,11 @@ local function randomString(wordsOrLen, rng)
 	end
 
 	wordsOrLen = wordsOrLen or randomRange(rng, 2, 15);
-	if wordsOrLen > 0 then
-		return randomString(wordsOrLen - 1, rng) .. charset[randomRange(rng, 1, #charset)]
-	else
-		return ""
+	local result = {}
+	for i = 1, wordsOrLen do
+		result[i] = charset[randomRange(rng, 1, #charset)]
 	end
+	return table.concat(result)
 end
 
 local function randomStringNode(wordsOrLen, rng)
