@@ -21,7 +21,7 @@ ControlFlow.SettingsDescriptor = {
 	},
 	MaxStatementsPerBlock = {
 		type = "number",
-		default = 40,
+		default = 100,
 		min = 0,
 		max = 128,
 	},
