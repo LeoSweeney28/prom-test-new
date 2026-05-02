@@ -51,39 +51,46 @@ local compundStats = lookupify{
 }
 
 function visitBlock(block, previsit, postvisit, data, isFunctionBlock)
-	block.isBlock = true;
-	block.isFunctionBlock = isFunctionBlock or false;
-	data.scope = block.scope;
-	local parentBlockData = data.blockData;
-	data.blockData = {};
-	table.insert(data.scopeStack, block.scope);
-	if(type(previsit) == "function") then
-		local node, skip = previsit(block, data);
-		block = node or block;
-		if skip then
-			data.scope = table.remove(data.scopeStack);
-			return block
-		end
-	end
+    block.isBlock = true;
+    block.isFunctionBlock = isFunctionBlock or false;
+    data.scope = block.scope;
+    local parentBlockData = data.blockData;
+    data.blockData = {};
+    table.insert(data.scopeStack, block.scope);
+    if(type(previsit) == "function") then
+        local node, skip = previsit(block, data);
+        block = node or block;
+        if skip then
+            data.scope = table.remove(data.scopeStack);
+            return block
+        end
+    end
 
-	local i = 1;
-	while i <= #block.statements do
-		local statement = table.remove(block.statements, i);
-		i = i - 1;
-		local returnedStatements = {visitStatement(statement, previsit, postvisit, data)};
-		for j, statement in ipairs(returnedStatements) do
-			i = i + 1;
-			table.insert(block.statements, i, statement);
-		end
-		i = i + 1;
-	end
+    local i = 1;
+    while i <= #block.statements do
+        local statement = block.statements[i];
+        if statement == nil then
+            table.remove(block.statements, i);
+        else
+            table.remove(block.statements, i);
+            local returnedStatements = {visitStatement(statement, previsit, postvisit, data)};
+            local inserted = 0;
+            for _, stmt in ipairs(returnedStatements) do
+                if stmt ~= nil then
+                    table.insert(block.statements, i + inserted, stmt);
+                    inserted = inserted + 1;
+                end
+            end
+            i = i + math.max(inserted, 1);
+        end
+    end
 
-	if(type(postvisit) == "function") then
-		block = postvisit(block, data) or block;
-	end
-	data.scope = table.remove(data.scopeStack);
-	data.blockData = parentBlockData;
-	return block;
+    if(type(postvisit) == "function") then
+        block = postvisit(block, data) or block;
+    end
+    data.scope = table.remove(data.scopeStack);
+    data.blockData = parentBlockData;
+    return block;
 end
 
 function visitStatement(statement, previsit, postvisit, data)
@@ -94,6 +101,11 @@ function visitStatement(statement, previsit, postvisit, data)
 		if skip then
 			return statement;
 		end
+	end
+
+	-- Guard against nil statement (e.g., when previsit returns nil)
+	if not statement then
+		return;  -- Return nothing (no values) so returnedStatements will be empty
 	end
 
 	-- Visit Child Nodes of Statement

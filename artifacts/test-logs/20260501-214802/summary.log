@@ -1,0 +1,2 @@
+[INFO] Starting extended tests: files=16 presets=7 iterations=10 out=artifacts/test-logs/20260501-214802
+[PASS] file=ambiguous-call.lua preset=Balanced iter=1 reason=ok obf_ms=78.00 ratio=2100.31% seed=openssl

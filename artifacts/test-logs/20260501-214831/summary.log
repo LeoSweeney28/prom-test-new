@@ -1,0 +1,11 @@
+[INFO] Starting extended tests: files=16 presets=7 iterations=10 out=artifacts/test-logs/20260501-214831
+[PASS] file=ambiguous-call.lua preset=Balanced iter=1 reason=ok obf_ms=75.00 ratio=2130.06% seed=openssl
+[FAIL] file=ambiguous-call.lua preset=Balanced iter=2 reason=print-output-mismatch obf_ms=66.00 ratio=2132.52% seed=openssl
+[PASS] file=ambiguous-call.lua preset=Balanced iter=3 reason=ok obf_ms=66.00 ratio=2115.64% seed=openssl
+[FAIL] file=ambiguous-call.lua preset=Balanced iter=4 reason=runtime-status-mismatch obf_ms=64.00 ratio=2095.09% seed=openssl
+[FAIL] file=ambiguous-call.lua preset=Balanced iter=5 reason=runtime-status-mismatch obf_ms=63.00 ratio=2039.88% seed=openssl
+[PASS] file=ambiguous-call.lua preset=Balanced iter=6 reason=ok obf_ms=62.00 ratio=2146.01% seed=openssl
+[FAIL] file=ambiguous-call.lua preset=Balanced iter=7 reason=runtime-status-mismatch obf_ms=60.00 ratio=2138.96% seed=openssl
+[PASS] file=ambiguous-call.lua preset=Balanced iter=8 reason=ok obf_ms=64.00 ratio=2078.53% seed=openssl
+[FAIL] file=ambiguous-call.lua preset=Balanced iter=9 reason=print-output-mismatch obf_ms=62.00 ratio=2233.13% seed=openssl
+[FAIL] file=ambiguous-call.lua preset=Balanced iter=10 reason=runtime-status-mismatch obf_ms=64.00 ratio=2141.41% seed=openssl

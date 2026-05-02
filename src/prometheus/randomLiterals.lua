@@ -47,7 +47,9 @@ end
 
 function RandomLiterals.Dictionary(pipeline, rng)
 	rng = resolveRng(pipeline, rng)
-    return RandomStrings.randomStringNode(true, rng);
+    -- Generate a random string as dictionary words aren't available
+    -- The 'true' parameter was causing an error - using a number instead
+    return RandomStrings.randomStringNode(randomRange(rng, 5, 15), rng);
 end
 
 function RandomLiterals.Number(pipeline, rng)

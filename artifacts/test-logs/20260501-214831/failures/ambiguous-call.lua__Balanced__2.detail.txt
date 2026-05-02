@@ -1,0 +1,19 @@
+Reason: print-output-mismatch
+
+[Source output]
+counter:	2
+
+[Obfuscated output]
+	2
+
+[Source returns]
+
+
+[Obfuscated returns]
+
+
+[Source err]
+table: 00E8DBA0
+
+[Obfuscated err]
+table: 00E90918

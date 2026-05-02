@@ -1,6 +1,6 @@
 print("PROMETHEUS Benchmark")
 print("Based On IronBrew Benchmark")
-local Iterations = 100000
+local Iterations = 10
 print("Iterations: " .. tostring(Iterations))
 
 print("CLOSURE testing.")

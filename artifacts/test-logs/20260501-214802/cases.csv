@@ -1,0 +1,2 @@
+status,file,preset,iteration,reason,obf_ms,size_ratio,seed_source
+PASS,ambiguous-call.lua,Balanced,1,ok,78.000,2100.307,openssl

@@ -79,7 +79,6 @@ return {
 			{ Name = "NumbersToExpressions", Settings = {} },
 			{Name = "ControlFlow", Settings = {}},
 			{ Name = "WrapInFunction", Settings = {} },
-			{ Name = "ProxifyLocals", Settings = {} },
 
 		},
 	},

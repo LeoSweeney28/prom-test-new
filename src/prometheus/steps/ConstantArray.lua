@@ -47,13 +47,13 @@ ConstantArray.SettingsDescriptor = {
 		name = "Rotate",
 		description = "Wether to rotate the String Array by a specific (random) amount. This will be undone on runtime.",
 		type = "boolean",
-		default = true,
+		default = false,
 	},
 	LocalWrapperTreshold = {
 		name = "LocalWrapperTreshold",
 		description = "The relative amount of nodes functions, that will get local wrappers",
 		type = "number",
-		default = 1,
+		default = 0,
 		min = 0,
 		max = 1,
 	},
@@ -101,6 +101,12 @@ local function callNameGenerator(generatorFunction, ...)
 		generatorFunction = generatorFunction.generateName;
 	end
 	return generatorFunction(...);
+end
+
+-- Returns true if a value is safe to store as a constant (not boolean, not nil)
+local function isSafeConstant(value)
+	local t = type(value)
+	return t ~= "boolean" and t ~= "nil"
 end
 
 function ConstantArray:init(_) end
@@ -152,6 +158,7 @@ function ConstantArray:createArray()
 		if type(v) == "string" then
 			v = self:encode(v);
 		end
+		-- All values here are guaranteed safe (booleans/nils never enter self.constants)
 		entries[i] = Ast.TableEntry(Ast.ConstantNode(v));
 	end
 	return Ast.TableConstructorExpression(entries);
@@ -192,6 +199,10 @@ function ConstantArray:indexing(index, data)
 end
 
 function ConstantArray:getConstant(value, data)
+	-- Booleans and nils must never enter the constant array
+	if not isSafeConstant(value) then
+		return;
+	end
 	if(self.lookup[value]) then
 		return self:indexing(self.lookup[value], data)
 	end
@@ -202,8 +213,12 @@ function ConstantArray:getConstant(value, data)
 end
 
 function ConstantArray:addConstant(value)
+	-- Booleans and nils must never enter the constant array
+	if not isSafeConstant(value) then
+		return;
+	end
 	if(self.lookup[value]) then
-		return
+		return;
 	end
 	local idx = #self.constants + 1;
 	self.constants[idx] = value;
@@ -699,10 +714,8 @@ function ConstantArray:apply(ast, pipeline)
 			if node.kind == AstKind.StringExpression then
 				self:addConstant(node.value);
 			elseif not self.StringsOnly then
-				if node.isConstant then
-					if node.value ~= nil then
-						self:addConstant(node.value);
-					end
+				if node.isConstant and isSafeConstant(node.value) then
+					self:addConstant(node.value);
 				end
 			end
 		end
@@ -757,10 +770,8 @@ function ConstantArray:apply(ast, pipeline)
 			if node.kind == AstKind.StringExpression then
 				return self:getConstant(node.value, data);
 			elseif not self.StringsOnly then
-				if node.isConstant then
-					if node.value ~= nil then
-						return self:getConstant(node.value, data);
-					end
+				if node.isConstant and isSafeConstant(node.value) then
+					return self:getConstant(node.value, data);
 				end
 			end
 			node.__apply_constant_array = nil;

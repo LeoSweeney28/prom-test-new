@@ -1,0 +1,34 @@
+Reason: runtime-status-mismatch
+
+[Source output]
+counter:	2
+
+[Obfuscated output]
+
+
+[Source returns]
+
+
+[Obfuscated returns]
+<none>
+
+[Source err]
+table: 00E7F228
+
+[Obfuscated err]
+ambiguous-call.lua__Balanced__10.obfuscated:1: attempt to compare number with table
+stack traceback:
+	ambiguous-call.lua__Balanced__10.obfuscated:1: in function <ambiguous-call.lua__Balanced__10.obfuscated:1>
+	(tail call): ?
+	ambiguous-call.lua__Balanced__10.obfuscated:1: in function <ambiguous-call.lua__Balanced__10.obfuscated:1>
+	(tail call): ?
+	ambiguous-call.lua__Balanced__10.obfuscated:1: in function <ambiguous-call.lua__Balanced__10.obfuscated:1>
+	(tail call): ?
+	(tail call): ?
+	(tail call): ?
+	(tail call): ?
+	tests_verbose.lua:180: in function <tests_verbose.lua:179>
+	[C]: in function 'xpcall'
+	tests_verbose.lua:179: in function 'captureRun'
+	tests_verbose.lua:388: in main chunk
+	[C]: ?

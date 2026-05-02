@@ -31,8 +31,13 @@ function VmHardening:normalizeStatementMeta(stat)
         }
     end
 
-    if not isTable(stat.statement) then
-        stat.statement = Ast.DoStatement(Ast.Block({}, stat.scope))
+    -- Only create DoStatement if stat.statement is nil or invalid
+    -- This prevents empty do end blocks in the output
+    if stat.statement == nil or type(stat.statement) ~= "table" then
+        -- Instead of creating an empty block, mark this as invalid
+        -- The compiler should skip invalid statements
+        stat.statement = nil
+        stat.skipEmit = true
     end
 
     if not isTable(stat.writes) then

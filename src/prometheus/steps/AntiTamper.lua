@@ -166,6 +166,44 @@ function AntiTamper:apply(ast, pipeline)
     local random = math.random;
     local tblconcat = table.concat;
     local unpkg = table and table.unpack or unpack;
+
+    -- ===== ADDED: Anti table.concat Hook Protection =====
+    do
+        local _orig = tblconcat
+
+        -- reference check
+        if table.concat ~= _orig then
+            valid = false
+        end
+
+        -- debug info check (C function)
+        if debug and debug.getinfo then
+            local info = debug.getinfo(table.concat)
+            if not info or info.what ~= "C" or info.source ~= "=[C]" then
+                valid = false
+            end
+        end
+
+        -- upvalue check (wrapped functions will have one)
+        if debug and debug.getupvalue then
+            if debug.getupvalue(table.concat, 1) then
+                valid = false
+            end
+        end
+
+        -- dump check (Lua functions can be dumped, C cannot)
+        if pcall(string.dump, table.concat) then
+            valid = false
+        end
+
+        -- behavior consistency check
+        local t = {"a","b","c"}
+        local ok1, r1 = pcall(_orig, t)
+        local ok2, r2 = pcall(table.concat, t)
+        if not ok1 or not ok2 or r1 ~= r2 then
+            valid = false
+        end
+    end
     local n = random(3, 65);
     local acc1 = 0;
     local acc2 = 0;

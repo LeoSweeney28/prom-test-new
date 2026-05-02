@@ -1,0 +1,11 @@
+status,file,preset,iteration,reason,obf_ms,size_ratio,seed_source
+PASS,ambiguous-call.lua,Balanced,1,ok,75.000,2130.061,openssl
+FAIL,ambiguous-call.lua,Balanced,2,print-output-mismatch,66.000,2132.515,openssl
+PASS,ambiguous-call.lua,Balanced,3,ok,66.000,2115.644,openssl
+FAIL,ambiguous-call.lua,Balanced,4,runtime-status-mismatch,64.000,2095.092,openssl
+FAIL,ambiguous-call.lua,Balanced,5,runtime-status-mismatch,63.000,2039.877,openssl
+PASS,ambiguous-call.lua,Balanced,6,ok,62.000,2146.012,openssl
+FAIL,ambiguous-call.lua,Balanced,7,runtime-status-mismatch,60.000,2138.957,openssl
+PASS,ambiguous-call.lua,Balanced,8,ok,64.000,2078.528,openssl
+FAIL,ambiguous-call.lua,Balanced,9,print-output-mismatch,62.000,2233.129,openssl
+FAIL,ambiguous-call.lua,Balanced,10,runtime-status-mismatch,64.000,2141.411,openssl
