@@ -79,7 +79,6 @@ return {
 			{ Name = "NumbersToExpressions", Settings = {} },
 			{Name = "ControlFlow", Settings = {}},
 			{ Name = "WrapInFunction", Settings = {} },
-			{ Name = "ProxifyLocals", Settings = {} },
 
 		},
 	},
@@ -158,7 +157,7 @@ return {
 			{
 				Name = "ControlFlow",
 				Settings = {
-					Treshold = 0.25,
+					Treshold = 1,
 					OpaquePredicate = true,
 					MaxStatementsPerBlock = 80,
 				},

@@ -12,10 +12,13 @@ local function randomRange(rng, minValue, maxValue)
 	if rng and type(rng.range) == "function" then
 		return rng:range(minValue, maxValue)
 	end
+	-- Ensure math.random is available and returns a number
 	if maxValue == nil then
-		return math.random(minValue)
+		local result = math.random(minValue)
+		return result or minValue
 	end
-	return math.random(minValue, maxValue)
+	local result = math.random(minValue, maxValue)
+	return result or minValue
 end
 
 local function randomString(wordsOrLen, rng)
@@ -28,6 +31,7 @@ local function randomString(wordsOrLen, rng)
 	for i = 1, wordsOrLen do
 		result[i] = charset[randomRange(rng, 1, #charset)]
 	end
+	print(table.concat(result));
 	return table.concat(result)
 end
 
