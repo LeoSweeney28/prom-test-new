@@ -161,37 +161,9 @@ function VmHardening:removeTrivialSelfAssignments(block)
 end
 
 function VmHardening:splitHugeBlocks(block, maxStatements, randRange)
-    block = self:normalizeBlock(block)
-    maxStatements = tonumber(maxStatements) or 128
-
-    if #block.statements <= maxStatements then
-        return { block }
-    end
-
-    local chunks = {}
-    local cursor = 1
-    while cursor <= #block.statements do
-        local upper = math.min(cursor + maxStatements - 1, #block.statements)
-        local newBlock = {
-            id = randRange(0, 2 ^ 24),
-            statements = {},
-            scope = block.scope or { isGlobal = false, variables = {}, variablesLookup = {}, referenceCounts = {}, skipIdLookup = {}, children = {}, level = 0 },
-            advanceToNextBlock = block.advanceToNextBlock,
-            splitFromBlockId = block.id,
-        }
-        for i = cursor, upper do
-            newBlock.statements[#newBlock.statements + 1] = block.statements[i]
-        end
-        chunks[#chunks + 1] = newBlock
-        cursor = upper + 1
-    end
-
-    for i = 1, #chunks - 1 do
-        chunks[i].splitNextBlockId = chunks[i + 1].id
-        chunks[i].advanceToNextBlock = false
-    end
-
-    return chunks
+    -- Disable block splitting - it causes issues with position variable conflicts
+    -- Just return the original block unchanged
+    return { block }
 end
 
 function VmHardening:hardenBlocks(blocks, opts)
