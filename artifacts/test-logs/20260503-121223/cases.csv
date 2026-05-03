@@ -1,0 +1,4 @@
+status,file,preset,iteration,reason,obf_ms,size_ratio,seed_source
+FAIL,loops.lua,Medium,1,runtime-status-mismatch,83.000,534.PASS,multi-return.lua,Medium,2,ok,101.000,792.456,explicit
+PASS,upvalues.lua,Medium,1,ok,81.000,1042.210,explicit
+PASS,upvalues.lua,Medium,2,ok,84.000,1042.150,explicit

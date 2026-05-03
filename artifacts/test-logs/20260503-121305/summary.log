@@ -1,0 +1,26 @@
+[INFO] Starting extended tests: files=17 presets=1 iterations=1 out=artifacts/test-logs/20260503-121305[PASS] file=multi-return.lua preset=Medium iter=1 reason=ok obf_ms=101.00 ratio=792.49% seed=e[PASS] f[PASS] file=upvalues.lua preset=Medium iter=1 reason=ok obf_ms=87.00 ratio=1042.27% se[PASS] file=loops.lua preset=Medium iter=3 reason=ok obf_ms=84.00 ratio=493.28% seed=explicit
+
+========== SUMMARY ==========
+Total Cases: 3
+Passed: 3
+Failed: 0
+Preset=Medium total=3 pass=3 fail=0 avg_obf_ms=83.00
+=fibonacci.obfuscated.lua preset=Vmify iter=1 reason=ok obf_ms=41.00 ratio=291.78% seed=openssl
+[PASS] file=iterator.lua preset=Vmify iter=1 reason=ok obf_ms=19.00 ratio=334.23% seed=openssl
+[PASS] file=loops.lua preset=Vmify iter=1 reason=ok obf_ms=33.00 ratio=151.06% seed=openssl
+[PASS] file=matrix.lua preset=Vmify iter=1 reason=ok obf_ms=24.00 ratio=322.37% seed=openssl
+[PASS] file=metatables.lua preset=Vmify iter=1 reason=ok obf_ms=26.00 ratio=322.35% seed=openssl
+[PASS] file=multi-return.lua preset=Vmify iter=1 reason=ok obf_ms=41.00 ratio=223.35% seed=openssl
+[PASS] file=primes.lua preset=Vmify iter=1 reason=ok obf_ms=23.00 ratio=430.28% seed=openssl
+[PASS] file=repeat-test.lua preset=Vmify iter=1 reason=ok obf_ms=46.00 ratio=116.47% seed=openssl
+[PASS] file=state-machine.lua preset=Vmify iter=1 reason=ok obf_ms=28.00 ratio=231.96% seed=openssl
+[PASS] file=strings.lua preset=Vmify iter=1 reason=ok obf_ms=22.00 ratio=304.61% seed=openssl
+[PASS] file=syntax.lua preset=Vmify iter=1 reason=ok obf_ms=31.00 ratio=211.25% seed=openssl
+[PASS] file=table-merge.lua preset=Vmify iter=1 reason=ok obf_ms=19.00 ratio=306.99% seed=openssl
+[PASS] file=upvalues.lua preset=Vmify iter=1 reason=ok obf_ms=33.00 ratio=241.97% seed=openssl
+
+========== SUMMARY ==========
+Total Cases: 17
+Passed: 17
+Failed: 0
+Preset=Vmify total=17 pass=17 fail=0 avg_obf_ms=27.71

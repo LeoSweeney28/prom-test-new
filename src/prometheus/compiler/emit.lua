@@ -35,9 +35,10 @@ return function(Compiler)
         local decoys = {};
         for i = 1, count do
             if self:randRange(1, 2) == 1 then
+                local decoyId = scope:addVariable("_D" .. self:randRange(1000, 9999));
                 table.insert(decoys, Ast.LocalVariableDeclaration(
                     scope,
-                    {Ast.Variable(scope, "_D" .. self:randRange(1000, 9999))},
+                    {decoyId},
                     {Ast.NumberExpression(self:randRange(-65536, 65536))}
                 ));
             end
@@ -66,9 +67,10 @@ return function(Compiler)
                     expr = Ast.PowerExpression(left, Ast.NumberExpression(2));
                 end
                 
+                local decoyId = scope:addVariable("_CD" .. self:randRange(1000, 9999));
                 table.insert(decoys, Ast.LocalVariableDeclaration(
                     scope,
-                    {Ast.Variable(scope, "_CD" .. self:randRange(1000, 9999))},
+                    {decoyId},
                     {expr}
                 ));
             end
@@ -109,6 +111,10 @@ return function(Compiler)
             blockstats = {};
             for idx, stat in ipairs(mergedBlockStats) do
                 blockstats[idx] = stat.statement;
+            end
+
+            if block.splitNextBlockId then
+                table.insert(blockstats, self:setPos(block.scope, block.splitNextBlockId));
             end
 
             local block = { id = id, index = i, block = Ast.Block(blockstats, block.scope) }
@@ -192,8 +198,8 @@ return function(Compiler)
             local bound = math.floor((leftMaxId + rightMinId) / 2);
             local ifScope = Scope:new(pScope);
 
-            local lBlock = buildElseifChain(tb, l, mid - 1, ifScope);
-            local rBlock = buildElseifChain(tb, mid, r, ifScope);
+            local lBlock = buildElseifChain(tb, l, mid - 1, pScope);
+            local rBlock = buildElseifChain(tb, mid, r, pScope);
 
             -- Randomly choose between different condition styles
             local condStyle = self:randRange(1, 3);

@@ -1,0 +1,32 @@
+Reason: runtime-status-mismatch
+
+[Source output]
+step1:(2,3)
+step2:(1,7)
+step3:(1,5)
+
+[Obfuscated output]
+
+
+[Source returns]
+
+
+[Obfuscated returns]
+<none>
+
+[Source err]
+table: 00F61370
+
+[Obfuscated err]
+metatables.lua__Medium__1.obfuscated:1: attempt to call local 'i' (a nil value)
+stack traceback:
+	metatables.lua__Medium__1.obfuscated:1: in function <metatables.lua__Medium__1.obfuscated:1>
+	(tail call): ?
+	(tail call): ?
+	(tail call): ?
+	(tail call): ?
+	tests_verbose.lua:180: in function <tests_verbose.lua:179>
+	[C]: in function 'xpcall'
+	tests_verbose.lua:179: in function 'captureRun'
+	tests_verbose.lua:388: in main chunk
+	[C]: ?

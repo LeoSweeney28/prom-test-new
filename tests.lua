@@ -141,7 +141,6 @@ for _, filename in ipairs(scandir(testdir)) do
 
 			if funcb == nil then
 				print(Prometheus.colors("[FAILED]  ", "red") .. "(" .. filename .. "): " .. name .. ", Invalid Lua!");
-				print("[SOURCE]", obfuscated);
 				fc = fc + 1;
 			else
 				local validated, outa, outb = validate(funca, funcb);
@@ -150,7 +149,6 @@ for _, filename in ipairs(scandir(testdir)) do
 					print(Prometheus.colors("[FAILED]  ", "red") .. "(" .. filename .. "): " .. name);
 					print("[OUTA]    ", outa);
 					print("[OUTB]    ", outb);
-					print("[SOURCE]", obfuscated);
 					fc = fc + 1;
 				end
 			end

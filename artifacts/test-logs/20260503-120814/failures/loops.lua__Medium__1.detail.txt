@@ -1,0 +1,30 @@
+Reason: runtime-status-mismatch
+
+[Source output]
+TESTS PASSED: 6/6
+
+[Obfuscated output]
+
+
+[Source returns]
+
+
+[Obfuscated returns]
+<none>
+
+[Source err]
+table: 0139DCE0
+
+[Obfuscated err]
+loops.lua__Medium__1.obfuscated:1: attempt to index local 'U' (a nil value)
+stack traceback:
+	loops.lua__Medium__1.obfuscated:1: in function <loops.lua__Medium__1.obfuscated:1>
+	(tail call): ?
+	(tail call): ?
+	(tail call): ?
+	(tail call): ?
+	tests_verbose.lua:180: in function <tests_verbose.lua:179>
+	[C]: in function 'xpcall'
+	tests_verbose.lua:179: in function 'captureRun'
+	tests_verbose.lua:388: in main chunk
+	[C]: ?

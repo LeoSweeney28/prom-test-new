@@ -1,0 +1,10 @@
+[INFO] Starting extended tests: files=1 presets=1 iterations=2 out=artifacts/test-logs/20260503-121223
+[FAIL] file=loops.lua preset=Medium iter=1 reason=runtime-status-mismatch obf_ms=83.00 ratio=534.72% s[PASS] file=multi-return.lua preset=Medium iter=2 reason=ok obf_ms=101.00 ratio=792.46% seed=explicit
+[PASS] file=upvalues.lua preset=Medium iter=1 reason=ok obf_ms=81.00 ratio=1042.21% seed=explicit
+[PASS] file=upvalues.lua preset=Medium iter=2 reason=ok obf_ms=84.00 ratio=1042.15% seed=explicit
+
+========== SUMMARY ==========
+Total Cases: 4
+Passed: 4
+Failed: 0
+Preset=Medium total=4 pass=4 fail=0 avg_obf_ms=94.00

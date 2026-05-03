@@ -99,10 +99,20 @@ local function isSafeProxifyInitializer(expr)
 
     local kind = expr.kind
     return kind == AstKind.BooleanExpression
-        or kind == AstKind.NilExpression
         or kind == AstKind.NumberExpression
         or kind == AstKind.StringExpression
         or kind == AstKind.TableConstructorExpression
+end
+
+local function hasOpenReturnExpression(expr)
+    if not expr then
+        return false
+    end
+
+    local kind = expr.kind
+    return kind == AstKind.FunctionCallExpression
+        or kind == AstKind.PassSelfFunctionCallExpression
+        or kind == AstKind.VarargExpression
 end
 
 function ProxifyLocals:CreateAssignmentExpression(info, expr, parentScope)
@@ -277,6 +287,24 @@ function ProxifyLocals:apply(ast, pipeline)
                     disable(arg.scope, arg.id)
                 end
             end
+        elseif node.kind == AstKind.LocalVariableDeclaration then
+            local exprCount = #node.expressions
+            local lastExpr = node.expressions[exprCount]
+            if #node.ids ~= exprCount or hasOpenReturnExpression(lastExpr) then
+                for _, id in ipairs(node.ids) do
+                    disable(node.scope, id)
+                end
+            end
+        elseif node.kind == AstKind.AssignmentStatement then
+            local rhsCount = #node.rhs
+            local lastExpr = node.rhs[rhsCount]
+            if #node.lhs ~= rhsCount or hasOpenReturnExpression(lastExpr) then
+                for _, lhs in ipairs(node.lhs) do
+                    if lhs.kind == AstKind.AssignmentVariable then
+                        disable(lhs.scope, lhs.id)
+                    end
+                end
+            end
         end
     end,
     function(node)
@@ -285,7 +313,7 @@ function ProxifyLocals:apply(ast, pipeline)
             for i, id in ipairs(node.ids) do
                 local info = getInfo(node.scope, id)
                 local expr = node.expressions[i] or Ast.NilExpression()
-                if info and isSafeProxifyInitializer(expr) then
+                if info and info.setValue and info.getValue and info.valueExpr and isSafeProxifyInitializer(expr) then
                     node.expressions[i] = self:CreateAssignmentExpression(info, expr, node.scope)
                 elseif info then
                     disable(node.scope, id)

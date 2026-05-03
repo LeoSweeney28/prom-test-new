@@ -1,0 +1,17 @@
+status,file,preset,iteration,reason,obf_ms,size_ratio,seed_source
+FAIL,loops.lua,Medium,1,runtime-status-mismatch,107.000,538.981,openssl
+FAIL,multi-return.lua,Medium,1,runtime-status-mismatch,127.000,921.879,openssl
+FAIL,upvalues.lua,Medium,1,runtime-status-mismatch,95.000,1084.541,openssl
+nacci.obfuscated.lua,Vmify,1,ok,41.000,291.778,openssl
+PASS,iterator.lua,Vmify,1,ok,20.000,353.153,openssl
+PASS,loops.lua,Vmify,1,ok,35.000,150.765,openssl
+PASS,matrix.lua,Vmify,1,ok,24.000,319.366,openssl
+PASS,metatables.lua,Vmify,1,ok,21.000,309.724,openssl
+PASS,multi-return.lua,Vmify,1,ok,36.000,225.952,openssl
+PASS,primes.lua,Vmify,1,ok,25.000,432.898,openssl
+PASS,repeat-test.lua,Vmify,1,ok,39.000,120.265,openssl
+PASS,state-machine.lua,Vmify,1,ok,21.000,233.777,openssl
+PASS,strings.lua,Vmify,1,ok,19.000,306.814,openssl
+PASS,syntax.lua,Vmify,1,ok,26.000,211.044,openssl
+PASS,table-merge.lua,Vmify,1,ok,20.000,307.143,openssl
+PASS,upvalues.lua,Vmify,1,ok,29.000,236.957,openssl

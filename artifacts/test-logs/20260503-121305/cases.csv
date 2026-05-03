@@ -1,0 +1,17 @@
+status,file,preset,iteration,reason,obf_ms,size_ratio,seed_source
+PASS,multi-return.lua,Medium,1,ok,101.000,792.493,ePASS,looPASS,upvalues.lua,Medium,1,ok,87.000,1042.2PASS,loops.lua,Medium,3,ok,84.000,493.283,explicit
+54,openssl
+PASS,fibonacci.lua,Vmify,1,ok,21.000,429.577,openssl
+PASS,fibonacci.obfuscated.lua,Vmify,1,ok,41.000,291.778,openssl
+PASS,iterator.lua,Vmify,1,ok,19.000,334.234,openssl
+PASS,loops.lua,Vmify,1,ok,33.000,151.064,openssl
+PASS,matrix.lua,Vmify,1,ok,24.000,322.371,openssl
+PASS,metatables.lua,Vmify,1,ok,26.000,322.351,openssl
+PASS,multi-return.lua,Vmify,1,ok,41.000,223.350,openssl
+PASS,primes.lua,Vmify,1,ok,23.000,430.283,openssl
+PASS,repeat-test.lua,Vmify,1,ok,46.000,116.467,openssl
+PASS,state-machine.lua,Vmify,1,ok,28.000,231.961,openssl
+PASS,strings.lua,Vmify,1,ok,22.000,304.609,openssl
+PASS,syntax.lua,Vmify,1,ok,31.000,211.246,openssl
+PASS,table-merge.lua,Vmify,1,ok,19.000,306.988,openssl
+PASS,upvalues.lua,Vmify,1,ok,33.000,241.969,openssl

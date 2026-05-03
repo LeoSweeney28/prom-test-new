@@ -177,12 +177,18 @@ function VmHardening:splitHugeBlocks(block, maxStatements, randRange)
             statements = {},
             scope = block.scope,
             advanceToNextBlock = block.advanceToNextBlock,
+            splitFromBlockId = block.id,
         }
         for i = cursor, upper do
             newBlock.statements[#newBlock.statements + 1] = block.statements[i]
         end
         chunks[#chunks + 1] = newBlock
         cursor = upper + 1
+    end
+
+    for i = 1, #chunks - 1 do
+        chunks[i].splitNextBlockId = chunks[i + 1].id
+        chunks[i].advanceToNextBlock = false
     end
 
     return chunks

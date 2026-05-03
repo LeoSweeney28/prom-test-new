@@ -1,0 +1,42 @@
+Reason: runtime-status-mismatch
+
+[Source output]
+Test 1 passed: basic multi-return	5	5
+Test 2 passed: mixed types	42	hello	true	nil
+Test 3 passed: discarding extra values	1
+Test 4 passed: extra variables get nil	1	2	3	nil
+Test 5 passed: multi-return in table (last)	a	b
+Test 6 passed: multi-return not last	a	c
+Test 7 passed: nested multi-return	2	4
+Test 8 passed: select count	5
+Test 9 passed: select specific	40
+Test 10 passed: vararg return	100	200	300
+Test 11 passed: multi-return as arguments	6
+All multi-return tests passed!
+
+[Obfuscated output]
+
+
+[Source returns]
+
+
+[Obfuscated returns]
+<none>
+
+[Source err]
+table: 01150FE8
+
+[Obfuscated err]
+multi-return.lua__Medium__3.obfuscated:1: Test 1 failed: basic multi-return
+stack traceback:
+	[C]: in function 'K'
+	multi-return.lua__Medium__3.obfuscated:1: in function <multi-return.lua__Medium__3.obfuscated:1>
+	(tail call): ?
+	(tail call): ?
+	(tail call): ?
+	(tail call): ?
+	tests_verbose.lua:180: in function <tests_verbose.lua:179>
+	[C]: in function 'xpcall'
+	tests_verbose.lua:179: in function 'captureRun'
+	tests_verbose.lua:388: in main chunk
+	[C]: ?

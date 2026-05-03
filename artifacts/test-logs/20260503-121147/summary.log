@@ -1,0 +1,18 @@
+[INFO] Starting extended tests: files=1 presets=1 iterations=3 out=artifacts/test-logs/20260503-121147
+[FAIL] file=loops.lua preset=Medium iter=1 reason=runtime-status-mismatch obf_ms=92.00 ratio=534.72% seed=explicit
+[FAIL] file=loops.lua preset=Medium iter=2 reason=runtime-status-mismatch obf_ms=88.00 ratio=534.75% seed=explicit
+[FAIL] file=loops.lua preset=Medium iter=3 reason=runtime-status-mismatch obf_ms=88.00 ratio=534.69% seed=explicit
+
+========== SUMMARY ==========
+Total Cases: 3
+Passed: 0
+Failed: 3
+Preset=Medium total=3 pass=0 fail=3 avg_obf_ms=89.33
+upvalues.lua preset=Medium iter=2 reason=obfuscation-error obf_ms=13.00 ratio=0.00% seed=explicit
+[FAIL] file=upvalues.lua preset=Medium iter=3 reason=obfuscation-error obf_ms=12.00 ratio=0.00% seed=explicit
+
+========== SUMMARY ==========
+Total Cases: 6
+Passed: 0
+Failed: 6
+Preset=Medium total=6 pass=0 fail=6 avg_obf_ms=13.17

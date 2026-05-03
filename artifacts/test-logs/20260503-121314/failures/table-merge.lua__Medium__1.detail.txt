@@ -1,0 +1,32 @@
+Reason: runtime-status-mismatch
+
+[Source output]
+eggs:4
+bacon:4
+toast:5
+
+[Obfuscated output]
+
+
+[Source returns]
+
+
+[Obfuscated returns]
+<none>
+
+[Source err]
+table: 0130D210
+
+[Obfuscated err]
+table-merge.lua__Medium__1.obfuscated:1: attempt to call local 'C' (a nil value)
+stack traceback:
+	table-merge.lua__Medium__1.obfuscated:1: in function <table-merge.lua__Medium__1.obfuscated:1>
+	(tail call): ?
+	(tail call): ?
+	(tail call): ?
+	(tail call): ?
+	tests_verbose.lua:180: in function <tests_verbose.lua:179>
+	[C]: in function 'xpcall'
+	tests_verbose.lua:179: in function 'captureRun'
+	tests_verbose.lua:388: in main chunk
+	[C]: ?

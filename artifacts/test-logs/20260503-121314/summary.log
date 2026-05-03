@@ -1,0 +1,24 @@
+[INFO] Starting extended tests: files=17 presets=1 iterations=1 out=artifacts/test-logs/20260503-121314
+[PASS] file=ambiguous-call.lua preset=Medium iter=1 reason=ok obf_ms=53.00 ratio=3392.02% seed=explicit
+[PASS] file=closures.lua preset=Medium iter=1 reason=ok obf_ms=55.00 ratio=3769.36% seed=explicit
+[PASS] file=coroutines.lua preset=Medium iter=1 reason=ok obf_ms=60.00 ratio=2319.62% seed=explicit
+[PASS] file=fibonacci.lua preset=Medium iter=1 reason=ok obf_ms=52.00 ratio=4189.44% seed=explicit
+[PASS] file=fibonacci.obfuscated.lua preset=Medium iter=1 reason=ok obf_ms=100.00 ratio=769.71% seed=explicit
+[PASS] file=iterator.lua preset=Medium iter=1 reason=ok obf_ms=58.00 ratio=2577.03% seed=explicit
+[PASS] file=loops.lua preset=Medium iter=1 reason=ok obf_ms=82.00 ratio=493.22% seed=explicit
+[PASS] file=matrix.lua preset=Medium iter=1 reason=ok obf_ms=70.00 ratio=2130.22% seed=explicit
+[FAIL] file=metatables.lua preset=Medium iter=1 reason=runtime-status-mismatch obf_ms=73.00 ratio=1912.48% seed=explicit
+[PASS] file=multi-return.lua preset=Medium iter=1 reason=ok obf_ms=112.00 ratio=792.57% seed=explicit
+[PASS] file=primes.lua preset=Medium iter=1 reason=ok obf_ms=57.00 ratio=2639.87% seed=explicit
+[FAIL] file=repeat-test.lua preset=Medium iter=1 reason=runtime-status-mismatch obf_ms=118.00 ratio=448.75% seed=explicit
+[FAIL] file=state-machine.lua preset=Medium iter=1 reason=runtime-status-mismatch obf_ms=73.00 ratio=1664.04% seed=explicit
+[PASS] file=strings.lua preset=Medium iter=1 reason=ok obf_ms=72.00 ratio=2455.11% seed=explicit
+[PASS] file=syntax.lua preset=Medium iter=1 reason=ok obf_ms=66.00 ratio=1350.15% seed=explicit
+[FAIL] file=table-merge.lua preset=Medium iter=1 reason=runtime-status-mismatch obf_ms=62.00 ratio=2091.93% seed=explicit
+[PASS] file=upvalues.lua preset=Medium iter=1 reason=ok obf_ms=88.00 ratio=1042.15% seed=explicit
+
+========== SUMMARY ==========
+Total Cases: 17
+Passed: 13
+Failed: 4
+Preset=Medium total=17 pass=13 fail=4 avg_obf_ms=73.59

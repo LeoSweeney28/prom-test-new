@@ -1,0 +1,42 @@
+Reason: runtime-status-mismatch
+
+[Source output]
+series:alpha-1,alpha-3,alpha-4,alpha-7
+watch1:2
+watch2:6
+watch3:12
+watch4:20
+acc1:3|1
+acc2:9|5
+acc3:18|14
+
+[Obfuscated output]
+series:alpha-1,alpha-3,alpha-4,alpha-7
+watch1:2
+watch2:6
+watch3:12
+watch4:20
+
+[Source returns]
+
+
+[Obfuscated returns]
+<none>
+
+[Source err]
+table: 013B1628
+
+[Obfuscated err]
+upvalues.lua__Medium__3.obfuscated:1: bad argument #4 to 'Z' (number expected, got nil)
+stack traceback:
+	[C]: in function 'Z'
+	upvalues.lua__Medium__3.obfuscated:1: in function <upvalues.lua__Medium__3.obfuscated:1>
+	(tail call): ?
+	(tail call): ?
+	(tail call): ?
+	(tail call): ?
+	tests_verbose.lua:180: in function <tests_verbose.lua:179>
+	[C]: in function 'xpcall'
+	tests_verbose.lua:179: in function 'captureRun'
+	tests_verbose.lua:388: in main chunk
+	[C]: ?
