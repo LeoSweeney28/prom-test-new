@@ -66,7 +66,7 @@ return {
 				},
 			},
 			{ Name = "ProxifyLocals", Settings = { MaxUsageCount = 10 } },
-			{ Name = "Vmify", Settings = { MaxStatements = 10 } },
+			{ Name = "Vmify", Settings = { MaxStatements = 120 } },
 
 			{
 				Name = "ConstantArray",

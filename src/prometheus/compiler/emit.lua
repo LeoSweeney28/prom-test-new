@@ -104,10 +104,6 @@ return function(Compiler)
             local id = block.id;
             local blockstats = block.statements;
 
-            if not block.scope then
-                block.scope = Scope:new(self.containerFuncScope or self.scope);
-            end
-
             blockstats = BlockOptimizer:reorderStatements(blockstats, function(a, b) return self:randRange(a, b) end);
 
             local mergedBlockStats = BlockOptimizer:mergeUntilStable(blockstats);
@@ -118,13 +114,10 @@ return function(Compiler)
             end
 
             if block.splitNextBlockId then
-                if block.scope then
-                    table.insert(blockstats, self:setPos(block.scope, block.splitNextBlockId));
-                end
+                table.insert(blockstats, self:setPos(block.scope, block.splitNextBlockId));
             end
 
-            local blockScope = block.scope or Scope:new(self.containerFuncScope or self.scope)
-            local block = { id = id, index = i, block = Ast.Block(blockstats, blockScope) }
+            local block = { id = id, index = i, block = Ast.Block(blockstats, block.scope) }
             table.insert(blocks, block);
             blocks[id] = block;
         end
@@ -134,9 +127,6 @@ return function(Compiler)
         -- Build a strict threshold condition between adjacent block IDs.
         -- Using a midpoint avoids exact-id comparisons while preserving dispatch.
         local function buildBlockThresholdCondition(scope, leftId, rightId, useAndOr)
-            if not scope then
-                scope = Scope:new(self.containerFuncScope or self.scope)
-            end
             local bound = math.floor((leftId + rightId) / 2);
             local posExpr = self:pos(scope);
             local boundExpr = Ast.NumberExpression(bound);
@@ -274,49 +264,19 @@ return function(Compiler)
             table.insert(stats, decoy);
         end
 
-        table.insert(stats, Ast.WhileStatement(
-            Ast.VariableExpression(self.containerFuncScope, self.posVar),
-            whileBody
-        ));
+        table.insert(stats, Ast.WhileStatement(whileBody, Ast.VariableExpression(self.containerFuncScope, self.posVar)));
 
-        -- Ensure returnVar always has a valid value before returning
-        table.insert(stats, Ast.AssignmentStatement({
-            Ast.AssignmentVariable(self.containerFuncScope, self.returnVar)
-        }, {
-            Ast.TableConstructorExpression({})
-        }));
 
         table.insert(stats, Ast.AssignmentStatement({
             Ast.AssignmentVariable(self.containerFuncScope, self.posVar)
         }, {
             Ast.LenExpression(Ast.VariableExpression(self.containerFuncScope, self.detectGcCollectVar))
-        }));
-
-        -- Ensure returnVar has a fallback value
-        table.insert(stats, Ast.AssignmentStatement({
-            Ast.AssignmentVariable(self.containerFuncScope, self.returnVar)
-        }, {
-            Ast.VariableExpression(self.containerFuncScope, self.returnVar)
         }));
 
         table.insert(stats, Ast.ReturnStatement{
             Ast.FunctionCallExpression(Ast.VariableExpression(self.scope, self.unpackVar), {
                 Ast.VariableExpression(self.containerFuncScope, self.returnVar)
-            })
-        });
-
-        -- Ensure we always return a valid value even if VM fails
-        table.insert(stats, 1, Ast.AssignmentStatement({
-            Ast.AssignmentVariable(self.containerFuncScope, self.returnVar)
-        }, {
-            Ast.TableConstructorExpression({})
-        }));
-
-        table.insert(stats, Ast.AssignmentStatement({
-            Ast.AssignmentVariable(self.containerFuncScope, self.posVar)
-        }, {
-            Ast.LenExpression(Ast.VariableExpression(self.containerFuncScope, self.detectGcCollectVar))
-        }));
+            });
         });
 
         return Ast.Block(stats, self.containerFuncScope);
