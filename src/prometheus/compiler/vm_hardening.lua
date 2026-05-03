@@ -32,7 +32,7 @@ function VmHardening:normalizeStatementMeta(stat)
     end
 
     if not isTable(stat.statement) then
-        stat.statement = Ast.DoStatement(Ast.Block({}, stat.scope))
+        stat.statement = Ast.NopStatement()
     end
 
     if not isTable(stat.writes) then

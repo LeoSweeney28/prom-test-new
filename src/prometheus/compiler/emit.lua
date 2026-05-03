@@ -21,6 +21,30 @@ return function(Compiler)
         return list
     end
 
+    -- Add dispatcher obfuscation: wrap with do/end block
+    function Compiler:wrapDispatcherInObfuscation(dispatcherBlock)
+        -- Wrap dispatcher in a do/end block for an extra control-flow layer
+        local wrappedScope = Scope:new(dispatcherBlock.scope);
+        return Ast.Block({
+            Ast.DoStatement(dispatcherBlock)
+        }, wrappedScope);
+    end
+
+    -- Add unreachable but syntactically valid decoy statements
+    function Compiler:addDecoyDeclarations(scope, count)
+        local decoys = {};
+        for i = 1, count do
+            if self:randRange(1, 2) == 1 then
+                table.insert(decoys, Ast.LocalVariableDeclaration(
+                    scope,
+                    {Ast.Variable(scope, "_D" .. self:randRange(1000, 9999))},
+                    {Ast.NumberExpression(self:randRange(-65536, 65536))}
+                ));
+            end
+        end
+        return decoys;
+    end
+
     function Compiler:emitContainerFuncBody()
         local blocks = {};
 
@@ -62,6 +86,7 @@ return function(Compiler)
                 -- Kept for compatibility with caller variations.
                 return Ast.LessThanExpression(posExpr, boundExpr);
             else
+                -- Randomize between equivalent safe conditions
                 local variant = self:randRange(1, 2);
                 if variant == 1 then
                     return Ast.LessThanExpression(posExpr, boundExpr);
@@ -142,7 +167,7 @@ return function(Compiler)
                 condition = Ast.GreaterThanExpression(Ast.NumberExpression(bound), self:pos(ifScope));
                 trueBlock, falseBlock = lBlock, rBlock;
             else
-                -- Equivalent split using strict > with branches reversed.
+                -- Equivalent split using strict > with branches reversed
                 condition = Ast.GreaterThanExpression(self:pos(ifScope), Ast.NumberExpression(bound));
                 trueBlock, falseBlock = rBlock, lBlock;
             end
@@ -153,6 +178,10 @@ return function(Compiler)
         end
 
         local whileBody = buildElseifChain(blocks, 1, #blocks, self.containerFuncScope);
+        
+        -- Apply obfuscation wrapper to dispatcher
+        whileBody = self:wrapDispatcherInObfuscation(whileBody);
+        
         if self.whileScope then
             -- Ensure whileScope is properly connected
             self.whileScope:setParent(self.containerFuncScope);
@@ -180,6 +209,13 @@ return function(Compiler)
         end
 
         table.insert(stats, Ast.LocalVariableDeclaration(self.containerFuncScope, util.shuffle(declarations), {}));
+        
+        -- Add optional decoy declarations for obfuscation
+        local decoys = self:addDecoyDeclarations(self.containerFuncScope, self:randRange(0, 3));
+        for _, decoy in ipairs(decoys) do
+            table.insert(stats, decoy);
+        end
+
 
         table.insert(stats, Ast.WhileStatement(whileBody, Ast.VariableExpression(self.containerFuncScope, self.posVar)));
 

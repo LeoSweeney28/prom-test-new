@@ -28,6 +28,7 @@ handlers[AstKind.ForStatement] = requireStatement("for_statement");
 handlers[AstKind.ForInStatement] = requireStatement("for_in_statement");
 handlers[AstKind.BreakStatement] = requireStatement("break_statement");
 handlers[AstKind.ContinueStatement] = requireStatement("continue_statement");
+handlers[AstKind.NopStatement] = function() end;  -- No-op statement, does nothing
 
 -- Compound statements share one handler
 local compoundHandler = requireStatement("compound");
