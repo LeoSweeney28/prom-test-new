@@ -145,8 +145,9 @@ function Unparser:unparseBlock(block, tabbing)
 	return joinParts(parts);
 end
 
-function Unparser:unparseStatement(statement, tabbing)
-	tabbing = tabbing and tabbing + 1 or 0;
+	function Unparser:unparseStatement(statement, tabbing)
+		if not statement then return "" end
+		tabbing = tabbing and tabbing + 1 or 0;
 	local parts = {};
 	local function push(...) -- Helper to add multiple strings efficiently
 		for i = 1, select('#', ...) do
@@ -246,7 +247,7 @@ function Unparser:unparseStatement(statement, tabbing)
 
 	-- Function Declaration
 	elseif(statement.kind == AstKind.FunctionDeclaration) then
-		local funcname = statement.scope:getVariableName(statement.id);
+		local funcname = statement.scope:getVariableName(statement.id) or "____nil_var____";
 		for _, index in ipairs(statement.indices) do
 			funcname = funcname .. "." .. index;
 		end
@@ -258,7 +259,7 @@ function Unparser:unparseStatement(statement, tabbing)
 			if(arg.kind == AstKind.VarargExpression) then
 				push("...");
 			else
-				push(arg.scope:getVariableName(arg.id));
+				push(arg.scope:getVariableName(arg.id) or "____nil_var____");
 			end
 		end
 		push(")");
@@ -268,7 +269,7 @@ function Unparser:unparseStatement(statement, tabbing)
 
 	-- Local Function Declaration
 	elseif(statement.kind == AstKind.LocalFunctionDeclaration) then
-		local funcname = statement.scope:getVariableName(statement.id);
+		local funcname = statement.scope:getVariableName(statement.id) or "____nil_var____";
 		push("local", self:whitespace(), "function", self:whitespace(), funcname, "(");
 		for i, arg in ipairs(statement.args) do
 			if i > 1 then
@@ -277,7 +278,7 @@ function Unparser:unparseStatement(statement, tabbing)
 			if(arg.kind == AstKind.VarargExpression) then
 				push("...");
 			else
-				push(arg.scope:getVariableName(arg.id));
+				push(arg.scope:getVariableName(arg.id) or "____nil_var____");
 			end
 		end
 		push(")");
@@ -292,7 +293,7 @@ function Unparser:unparseStatement(statement, tabbing)
 			if i > 1 then
 				push(",", self:optionalWhitespace());
 			end
-			push(statement.scope:getVariableName(id));
+			push(statement.scope:getVariableName(id) or "____nil_var____");
 		end
 		if(#statement.expressions > 0) then
 			push(self:optionalWhitespace(), "=", self:optionalWhitespace());
@@ -306,9 +307,9 @@ function Unparser:unparseStatement(statement, tabbing)
 
 	-- Function Call Statement
 	elseif(statement.kind == AstKind.FunctionCallStatement) then
-		if not (statement.base.kind == AstKind.IndexExpression or statement.base.kind == AstKind.VariableExpression) then
+		if statement.base and (not (statement.base.kind == AstKind.IndexExpression or statement.base.kind == AstKind.VariableExpression)) then
 			push("(", self:unparseExpression(statement.base, tabbing), ")");
-		else
+		elseif statement.base then
 			push(self:unparseExpression(statement.base, tabbing));
 		end
 		push("(");
@@ -322,9 +323,9 @@ function Unparser:unparseStatement(statement, tabbing)
 
 	-- Pass Self Function Call Statement
 	elseif(statement.kind == AstKind.PassSelfFunctionCallStatement) then
-		if not (statement.base.kind == AstKind.IndexExpression or statement.base.kind == AstKind.VariableExpression) then
+		if statement.base and (not (statement.base.kind == AstKind.IndexExpression or statement.base.kind == AstKind.VariableExpression)) then
 			push("(", self:unparseExpression(statement.base, tabbing), ")");
-		else
+		elseif statement.base then
 			push(self:unparseExpression(statement.base, tabbing));
 		end
 		push(":", statement.passSelfFunctionName, "(");
@@ -386,8 +387,9 @@ function Unparser:unparseStatement(statement, tabbing)
 	return self:tabs(tabbing, false) .. joinParts(parts);
 end
 
-function Unparser:unparseExpression(expression, tabbing)
-	if expression.isParenthesizedExpression then
+	function Unparser:unparseExpression(expression, tabbing)
+		if not expression then return "nil" end
+		if expression.isParenthesizedExpression then
 		local unwrapped = {}
 		for k, v in pairs(expression) do
 			unwrapped[k] = v
@@ -422,7 +424,8 @@ function Unparser:unparseExpression(expression, tabbing)
 	end
 
 	if(expression.kind == AstKind.VariableExpression or expression.kind == AstKind.AssignmentVariable) then
-		return expression.scope:getVariableName(expression.id);
+		local name = expression.scope:getVariableName(expression.id)
+		return name or "____nil_var____"
 	end
 
 	if(expression.kind == AstKind.StringExpression) then
@@ -569,8 +572,8 @@ function Unparser:unparseExpression(expression, tabbing)
 
 	k = AstKind.IndexExpression;
 	if(expression.kind == k or expression.kind == AstKind.AssignmentIndexing) then
-		local base = self:unparseExpression(expression.base, tabbing);
-		if(expression.base.kind == AstKind.VarargExpression or Ast.astKindExpressionToNumber(expression.base.kind) > Ast.astKindExpressionToNumber(k) or expression.base.kind == AstKind.StringExpression or expression.base.kind == AstKind.NumberExpression or expression.base.kind == AstKind.NilExpression) then
+		local base = expression.base and self:unparseExpression(expression.base, tabbing) or "nil";
+		if expression.base and (expression.base.kind == AstKind.VarargExpression or Ast.astKindExpressionToNumber(expression.base.kind) > Ast.astKindExpressionToNumber(k) or expression.base.kind == AstKind.StringExpression or expression.base.kind == AstKind.NumberExpression or expression.base.kind == AstKind.NilExpression) then
 			base = "(" .. base .. ")";
 		end
 
@@ -586,9 +589,9 @@ function Unparser:unparseExpression(expression, tabbing)
 
 	k = AstKind.FunctionCallExpression;
 	if(expression.kind == k) then
-		if not (expression.base.kind == AstKind.IndexExpression or expression.base.kind == AstKind.VariableExpression) then
+		if expression.base and (not (expression.base.kind == AstKind.IndexExpression or expression.base.kind == AstKind.VariableExpression)) then
 			push("(", self:unparseExpression(expression.base, tabbing), ")");
-		else
+		elseif expression.base then
 			push(self:unparseExpression(expression.base, tabbing));
 		end
 		push("(");
@@ -604,9 +607,9 @@ function Unparser:unparseExpression(expression, tabbing)
 
 	k = AstKind.PassSelfFunctionCallExpression;
 	if(expression.kind == k) then
-		if not (expression.base.kind == AstKind.IndexExpression or expression.base.kind == AstKind.VariableExpression) then
+		if expression.base and (not (expression.base.kind == AstKind.IndexExpression or expression.base.kind == AstKind.VariableExpression)) then
 			push("(", self:unparseExpression(expression.base, tabbing), ")");
-		else
+		elseif expression.base then
 			push(self:unparseExpression(expression.base, tabbing));
 		end
 		push(":", expression.passSelfFunctionName, "(");
@@ -630,7 +633,7 @@ function Unparser:unparseExpression(expression, tabbing)
 			if(arg.kind == AstKind.VarargExpression) then
 				push("...");
 			else
-				push(arg.scope:getVariableName(arg.id));
+				push(arg.scope:getVariableName(arg.id) or "____nil_var____");
 			end
 		end
 		push(")");

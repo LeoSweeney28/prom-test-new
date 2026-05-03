@@ -92,6 +92,21 @@ function AntiTamper:apply(ast, pipeline)
 		local string = RandomStrings.randomString()
 		code = code
 			.. [[
+            local _table = table
+            local _string = string
+            local _debug = debug
+            local _pcall = pcall
+
+            local _concat = _table.concat
+            local _gmatch = _string.gmatch
+            local _dump = _string.dump
+
+            -- Integrity check (C function check)
+            if _debug and _debug.getinfo then
+                if _debug.getinfo(_concat).what ~= "C" then
+                    error("Tamper Detected (concat hook)")
+                end
+            end
             -- Anti Beautify
 			local sethook = debug and debug.sethook or function() end;
 			local allowedLine = nil;
@@ -232,6 +247,17 @@ end
     (function() end)(obj);
 
     repeat until valid;
+
+    if getmetatable(_table) ~= nil then
+    error("Tamper Detected (table proxy)")
+    end
+
+    if getmetatable(_string) ~= nil then
+        error("Tamper Detected (string proxy)")
+    end
+    if _pcall(_dump, _concat) then
+    error("Tamper Detected")
+    end
     ]]
 
     local parsed = Parser:new({LuaVersion = Enums.LuaVersion.Lua51}):parse(code);

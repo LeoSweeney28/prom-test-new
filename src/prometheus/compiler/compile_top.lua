@@ -26,6 +26,7 @@ return function(Compiler)
         }
 
                 visitast(node, function(node, data)
+            if not node then return nil end
             if node.kind == AstKind.Block then
                 node.scope.__depth = data.functionData.depth;
             end
@@ -101,7 +102,7 @@ return function(Compiler)
         local scope = self.activeBlock.scope;
         self:pushRegisterUsageInfo();
         for i, arg in ipairs(node.args) do
-            if(arg.kind == AstKind.VariableExpression) then
+            if arg and arg.kind == AstKind.VariableExpression then
                 if(self:isUpvalue(arg.scope, arg.id)) then
                     scope:addReferenceToHigherScope(self.scope, self.allocUpvalFunction);
                     local argReg = self:getVarRegister(arg.scope, arg.id, funcDepth, nil);
@@ -148,7 +149,7 @@ return function(Compiler)
 
         local retReg = self:allocRegister(false);
 
-        local isVarargFunction = #node.args > 0 and node.args[#node.args].kind == AstKind.VarargExpression;
+        local isVarargFunction = node.args and #node.args > 0 and node.args[#node.args] and node.args[#node.args].kind == AstKind.VarargExpression;
 
         local retrieveExpression
         if isVarargFunction then
@@ -171,22 +172,28 @@ return function(Compiler)
     end
 
     function Compiler:compileBlock(block, funcDepth)
+        if not block or not block.statements then return end
         for i, stat in ipairs(block.statements) do
-            self:compileStatement(stat, funcDepth);
+            if stat then
+                self:compileStatement(stat, funcDepth);
+            end
         end
 
         local scope = self.activeBlock.scope;
+        if not block.scope then return end
         for id, name in ipairs(block.scope.variables) do
-            local varReg = self:getVarRegister(block.scope, id, funcDepth, nil);
-            if self:isUpvalue(block.scope, id) then
-                scope:addReferenceToHigherScope(self.scope, self.freeUpvalueFunc);
-                self:addStatement(self:setRegister(scope, varReg, Ast.FunctionCallExpression(Ast.VariableExpression(self.scope, self.freeUpvalueFunc), {
-                    self:register(scope, varReg)
-                })), {varReg}, {varReg}, false);
-            else
-                self:addStatement(self:setRegister(scope, varReg, Ast.NilExpression()), {varReg}, {}, false);
+            if name then
+                local varReg = self:getVarRegister(block.scope, id, funcDepth, nil);
+                if self:isUpvalue(block.scope, id) then
+                    scope:addReferenceToHigherScope(self.scope, self.freeUpvalueFunc);
+                    self:addStatement(self:setRegister(scope, varReg, Ast.FunctionCallExpression(Ast.VariableExpression(self.scope, self.freeUpvalueFunc), {
+                        self:register(scope, varReg)
+                    })), {varReg}, {varReg}, false);
+                else
+                    self:addStatement(self:setRegister(scope, varReg, Ast.NilExpression()), {varReg}, {}, false);
+                end
+                self:freeRegister(varReg, true);
             end
-            self:freeRegister(varReg, true);
         end
     end
 end

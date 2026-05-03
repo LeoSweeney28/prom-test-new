@@ -187,6 +187,7 @@ end
 
 -- Returns the name of an Variable by id - this is used for unparsing
 function Scope:getVariableName(id)
+	if not id then return nil end
 	return self.variables[id];
 end
 
@@ -301,7 +302,9 @@ function Scope:renameVariables(settings)
 			for id, count in pairs(ids) do
 				if count and count > 0 then
 					local name = scope:getVariableName(id);
-					forbiddenNamesLookup[name] = true;
+					if name then
+						forbiddenNamesLookup[name] = true;
+					end
 				end
 			end
 		end

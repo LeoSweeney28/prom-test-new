@@ -232,6 +232,7 @@ function EncryptStrings:apply(ast, _)
 	doStat.body.scope:setParent(ast.body.scope);
 
 	visitast(newAst, nil, function(node, data)
+		if not node then return nil end
 		if(node.kind == AstKind.FunctionDeclaration) then
 			if(node.scope:getVariableName(node.id) == "DECRYPT") then
 				data.scope:removeReferenceToHigherScope(node.scope, node.id);
@@ -241,6 +242,7 @@ function EncryptStrings:apply(ast, _)
 			end
 		end
 		if(node.kind == AstKind.AssignmentVariable or node.kind == AstKind.VariableExpression) then
+			if not node then return nil end
 			if(node.scope:getVariableName(node.id) == "STRINGS") then
 				data.scope:removeReferenceToHigherScope(node.scope, node.id);
 				data.scope:addReferenceToHigherScope(scope, stringsVar);
@@ -251,6 +253,7 @@ function EncryptStrings:apply(ast, _)
 	end)
 
 	visitast(ast, nil, function(node, data)
+		if not node then return nil end
 		if(node.kind == AstKind.StringExpression) then
 			data.scope:addReferenceToHigherScope(scope, stringsVar);
 			data.scope:addReferenceToHigherScope(scope, decryptVar);

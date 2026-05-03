@@ -35,6 +35,7 @@ end
 
 function NumbersToExpressions:apply(ast, _)
 	visitast(ast, nil, function(node, _)
+		if not node then return nil end
 		if node.kind == AstKind.NumberExpression then
 			-- Return node unchanged (no transformation)
 			return node

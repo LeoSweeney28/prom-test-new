@@ -53,7 +53,7 @@ function VmHardening:normalizeBlock(block)
         return {
             id = 0,
             statements = {},
-            scope = nil,
+            scope = { isGlobal = false, variables = {}, variablesLookup = {}, referenceCounts = {}, skipIdLookup = {}, children = {}, level = 0 },
             advanceToNextBlock = false,
         }
     end
@@ -175,7 +175,7 @@ function VmHardening:splitHugeBlocks(block, maxStatements, randRange)
         local newBlock = {
             id = randRange(0, 2 ^ 24),
             statements = {},
-            scope = block.scope,
+            scope = block.scope or { isGlobal = false, variables = {}, variablesLookup = {}, referenceCounts = {}, skipIdLookup = {}, children = {}, level = 0 },
             advanceToNextBlock = block.advanceToNextBlock,
             splitFromBlockId = block.id,
         }

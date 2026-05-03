@@ -87,6 +87,8 @@ function visitBlock(block, previsit, postvisit, data, isFunctionBlock)
 end
 
 function visitStatement(statement, previsit, postvisit, data)
+	if not statement then return nil end
+	if not statement.kind then return nil end
 	statement.isStatement = true;
 	if(type(previsit) == "function") then
 		local node, skip = previsit(statement, data);
@@ -95,6 +97,8 @@ function visitStatement(statement, previsit, postvisit, data)
 			return statement;
 		end
 	end
+
+	if not statement or not statement.kind then return nil end
 
 	-- Visit Child Nodes of Statement
 	if(statement.kind == AstKind.ReturnStatement) then
@@ -187,6 +191,8 @@ local binaryExpressions = lookupify{
 	AstKind.PowExpression,
 }
 function visitExpression(expression, previsit, postvisit, data)
+	if not expression then return nil end
+	if not expression.kind then return nil end
 	expression.isExpression = true;
 	if(type(previsit) == "function") then
 		local node, skip = previsit(expression, data);
@@ -195,6 +201,8 @@ function visitExpression(expression, previsit, postvisit, data)
 			return expression;
 		end
 	end
+
+	if not expression or not expression.kind then return nil end
 
 	if(binaryExpressions[expression.kind]) then
 		expression.lhs = visitExpression(expression.lhs, previsit, postvisit, data);

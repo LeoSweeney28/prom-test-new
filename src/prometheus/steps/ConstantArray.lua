@@ -694,6 +694,7 @@ function ConstantArray:apply(ast, pipeline)
 	-- Extract Constants
 	visitast(ast, nil, function(node, data)
 		-- Apply only to some nodes
+		if not node then return nil end
 		if self:_chance(self.Treshold) then
 			node.__apply_constant_array = true;
 			if node.kind == AstKind.StringExpression then
@@ -722,6 +723,7 @@ function ConstantArray:apply(ast, pipeline)
 	self.wrapperId = self.rootScope:addVariable();
 
 	visitast(ast, function(node, data)
+		if not node then return nil end
 		-- Add Local Wrapper Functions
 		if self.LocalWrapperCount > 0 and node.kind == AstKind.Block and node.isFunctionBlock and self:_chance(self.LocalWrapperTreshold) then
 			local id = node.scope:addVariable()
@@ -748,11 +750,7 @@ function ConstantArray:apply(ast, pipeline)
 				data.functionData.__used = false;
 			end
 		end
-		if node.__apply_constant_array then
-			data.functionData.__used = true;
-		end
-	end, function(node, data)
-		-- Actually insert Statements to get the Constant Values
+		if not node then return nil end
 		if node.__apply_constant_array then
 			if node.kind == AstKind.StringExpression then
 				return self:getConstant(node.value, data);
@@ -767,6 +765,7 @@ function ConstantArray:apply(ast, pipeline)
 		end
 
 		-- Insert Local Wrapper Declarations
+		if not node then return nil end
 		if self.LocalWrapperCount > 0 and node.kind == AstKind.Block and node.isFunctionBlock and data.functionData.local_wrappers and data.functionData.__used then
 			data.functionData.__used = nil;
 			local elems = {};

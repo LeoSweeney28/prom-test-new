@@ -244,6 +244,7 @@ function SplitStrings:apply(ast, pipeline)
 
 	visitAst(ast, function(node, data)
 		-- Previsit Function
+		if not node then return nil end
 
 		-- Create Local Function declarations
 		if(self.ConcatenationType == "custom" and data.customFunctionType == "local" and node.kind == Ast.AstKind.Block and node.isFunctionBlock) then
@@ -262,6 +263,7 @@ function SplitStrings:apply(ast, pipeline)
 		end
 
 	end, function(node, data)
+		if not node then return nil end
 		-- PostVisit Function
 
 		-- Create actual function literals for local customFunctionType
@@ -276,6 +278,7 @@ function SplitStrings:apply(ast, pipeline)
 
 
 		-- Apply Only to String nodes
+		if not node then return nil end
 		if(node.kind == Ast.AstKind.StringExpression) then
 			local str = node.value;
 			local chunks = {};

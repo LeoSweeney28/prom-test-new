@@ -14,19 +14,21 @@ return function(Compiler)
     compileTop(Compiler);
 
     function Compiler:compileStatement(statement, funcDepth)
-        local handler = statementHandlers[statement.kind];
+        if not statement then return end
+        local handler = statement.kind and statementHandlers[statement.kind];
         if handler then
             handler(self, statement, funcDepth);
             return;
         end
-        logger:error(string.format("%s is not a compilable statement!", statement.kind));
+        logger:error(string.format("%s is not a compilable statement!", statement.kind or "nil"));
     end
 
     function Compiler:compileExpression(expression, funcDepth, numReturns)
-        local handler = expressionHandlers[expression.kind];
+        if not expression then return nil end
+        local handler = expression.kind and expressionHandlers[expression.kind];
         if handler then
             return handler(self, expression, funcDepth, numReturns);
         end
-        logger:error(string.format("%s is not a compilable expression!", expression.kind));
+        logger:error(string.format("%s is not a compilable expression!", expression.kind or "nil"));
     end
 end

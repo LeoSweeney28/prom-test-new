@@ -288,7 +288,7 @@ function ProxifyLocals:apply(ast, pipeline)
             end
 
             for _, arg in ipairs(node.args) do
-                if arg.kind == AstKind.VariableExpression then
+                if arg and arg.kind == AstKind.VariableExpression then
                     disable(arg.scope, arg.id)
                 end
             end
