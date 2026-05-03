@@ -1,0 +1,35 @@
+Reason: runtime-status-mismatch
+
+[Source output]
+1:start->running
+2:pause->paused
+3:resume->running
+4:stop->stopped
+final:stopped
+
+[Obfuscated output]
+
+
+[Source returns]
+
+
+[Obfuscated returns]
+<none>
+
+[Source err]
+table: 012CFEB0
+
+[Obfuscated err]
+state-machine.lua__Hardened__1.obfuscated:1: attempt to call local 'u' (a nil value)
+stack traceback:
+	state-machine.lua__Hardened__1.obfuscated:1: in function <state-machine.lua__Hardened__1.obfuscated:1>
+	(tail call): ?
+	(tail call): ?
+	(tail call): ?
+	(tail call): ?
+	(tail call): ?
+	tests_verbose.lua:180: in function <tests_verbose.lua:179>
+	[C]: in function 'xpcall'
+	tests_verbose.lua:179: in function 'captureRun'
+	tests_verbose.lua:388: in main chunk
+	[C]: ?

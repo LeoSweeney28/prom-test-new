@@ -1,0 +1,42 @@
+[INFO] Starting extended tests: files=17 presets=2 iterations=1 out=artifacts/test-logs/20260503-123735
+[PASS] file=ambiguous-call.lua preset=Medium iter=1 reason=ok obf_ms=43.00 ratio=2695.71% seed=explicit
+[PASS] file=ambiguous-call.lua preset=Vmify iter=1 reason=ok obf_ms=2.00 ratio=335.28% seed=explicit
+[PASS] file=closures.lua preset=Medium iter=1 reason=ok obf_ms=44.00 ratio=2963.97% seed=explicit
+[PASS] file=closures.lua preset=Vmify iter=1 reason=ok obf_ms=0.00 ratio=523.57% seed=explicit
+[PASS] file=coroutines.lua preset=Medium iter=1 reason=ok obf_ms=59.00 ratio=1807.69% seed=explicit
+[PASS] file=coroutines.lua preset=Vmify iter=1 reason=ok obf_ms=4.00 ratio=382.50% seed=explicit
+[PASS] file=fibonacci.lua preset=Medium iter=1 reason=ok obf_ms=45.00 ratio=3296.13% seed=explicit
+[PASS] file=fibonacci.lua preset=Vmify iter=1 reason=ok obf_ms=2.00 ratio=430.99% seed=explicit
+[PASS] file=fibonacci.obfuscated.lua preset=Medium iter=1 reason=ok obf_ms=80.00 ratio=656.03% seed=explicit
+[PASS] file=fibonacci.obfuscated.lua preset=Vmify iter=1 reason=ok obf_ms=26.00 ratio=286.73% seed=explicit
+[PASS] file=iterator.lua preset=Medium iter=1 reason=ok obf_ms=43.00 ratio=1986.49% seed=explicit
+[PASS] file=iterator.lua preset=Vmify iter=1 reason=ok obf_ms=4.00 ratio=338.06% seed=explicit
+[PASS] file=loops.lua preset=Medium iter=1 reason=ok obf_ms=71.00 ratio=409.00% seed=explicit
+[PASS] file=loops.lua preset=Vmify iter=1 reason=ok obf_ms=21.00 ratio=151.72% seed=explicit
+[PASS] file=matrix.lua preset=Medium iter=1 reason=ok obf_ms=49.00 ratio=1549.08% seed=explicit
+[PASS] file=matrix.lua preset=Vmify iter=1 reason=ok obf_ms=8.00 ratio=322.20% seed=explicit
+[PASS] file=metatables.lua preset=Medium iter=1 reason=ok obf_ms=49.00 ratio=1489.40% seed=explicit
+[PASS] file=metatables.lua preset=Vmify iter=1 reason=ok obf_ms=9.00 ratio=327.14% seed=explicit
+[PASS] file=multi-return.lua preset=Medium iter=1 reason=ok obf_ms=77.00 ratio=572.39% seed=explicit
+[PASS] file=multi-return.lua preset=Vmify iter=1 reason=ok obf_ms=24.00 ratio=220.22% seed=explicit
+[PASS] file=primes.lua preset=Medium iter=1 reason=ok obf_ms=47.00 ratio=2053.38% seed=explicit
+[PASS] file=primes.lua preset=Vmify iter=1 reason=ok obf_ms=2.00 ratio=411.11% seed=explicit
+[FAIL] file=repeat-test.lua preset=Medium iter=1 reason=runtime-status-mismatch obf_ms=114.00 ratio=396.17% seed=explicit
+[PASS] file=repeat-test.lua preset=Vmify iter=1 reason=ok obf_ms=30.00 ratio=116.50% seed=explicit
+[FAIL] file=state-machine.lua preset=Medium iter=1 reason=runtime-status-mismatch obf_ms=52.00 ratio=1315.25% seed=explicit
+[PASS] file=state-machine.lua preset=Vmify iter=1 reason=ok obf_ms=12.00 ratio=233.17% seed=explicit
+[PASS] file=strings.lua preset=Medium iter=1 reason=ok obf_ms=47.00 ratio=1842.89% seed=explicit
+[PASS] file=strings.lua preset=Vmify iter=1 reason=ok obf_ms=4.00 ratio=306.01% seed=explicit
+[PASS] file=syntax.lua preset=Medium iter=1 reason=ok obf_ms=55.00 ratio=1094.43% seed=explicit
+[PASS] file=syntax.lua preset=Vmify iter=1 reason=ok obf_ms=6.00 ratio=221.38% seed=explicit
+[PASS] file=table-merge.lua preset=Medium iter=1 reason=ok obf_ms=54.00 ratio=1484.32% seed=explicit
+[PASS] file=table-merge.lua preset=Vmify iter=1 reason=ok obf_ms=6.00 ratio=307.14% seed=explicit
+[PASS] file=upvalues.lua preset=Medium iter=1 reason=ok obf_ms=64.00 ratio=757.13% seed=explicit
+[PASS] file=upvalues.lua preset=Vmify iter=1 reason=ok obf_ms=11.00 ratio=235.14% seed=explicit
+
+========== SUMMARY ==========
+Total Cases: 34
+Passed: 32
+Failed: 2
+Preset=Medium total=17 pass=15 fail=2 avg_obf_ms=58.41
+Preset=Vmify total=17 pass=17 fail=0 avg_obf_ms=10.06

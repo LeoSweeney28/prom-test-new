@@ -129,7 +129,7 @@ do
 		"local random = math.random",
 		"local remove = table.remove",
 		"local insert = table.insert",
-		"local concat = table.concat",
+		"local function concat(parts) local out = '' for i = 1, #parts do out = out .. parts[i] end return out end",
 		"local char = string.char",
 		"local sbyte = string.byte",
 		"local state_45 = 0",

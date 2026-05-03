@@ -1,0 +1,43 @@
+Reason: runtime-status-mismatch
+
+[Source output]
+[PASS] #1 Basic local visibility in until condition
+[PASS] #2 Repeat locals do not escape scope
+[PASS] #3 Immediate termination executes once
+[PASS] #4 Multiple locals and arithmetic
+[PASS] #5 Nested repeat loops
+[PASS] #6 Function call in until condition
+[PASS] #7 Upvalue capture from repeat body
+[PASS] #8 Side effects in until condition
+[PASS] #9 Break bypasses until evaluation
+[PASS] #10 Local shadowing and slot reuse
+[PASS] #11 Table writes inside repeat
+[PASS] #12 Non-linear termination logic
+
+All repeat-until tests passed successfully.
+
+[Obfuscated output]
+
+
+[Source returns]
+
+
+[Obfuscated returns]
+<none>
+
+[Source err]
+table: 016AF5F0
+
+[Obfuscated err]
+repeat-test.lua__Medium__1.obfuscated:1: attempt to concatenate local 'b' (a table value)
+stack traceback:
+	repeat-test.lua__Medium__1.obfuscated:1: in function <repeat-test.lua__Medium__1.obfuscated:1>
+	(tail call): ?
+	(tail call): ?
+	(tail call): ?
+	(tail call): ?
+	tests_verbose.lua:180: in function <tests_verbose.lua:179>
+	[C]: in function 'xpcall'
+	tests_verbose.lua:179: in function 'captureRun'
+	tests_verbose.lua:388: in main chunk
+	[C]: ?

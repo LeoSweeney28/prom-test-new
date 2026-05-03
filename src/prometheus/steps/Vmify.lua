@@ -17,7 +17,7 @@ Vmify.SettingsDescriptor = {
         name = "MaxStatements",
         description = "Maximum number of statements per hardened VM dispatcher block",
         type = "number",
-        default = 1000,
+        default = 120,
         min = 1,
     },
 }

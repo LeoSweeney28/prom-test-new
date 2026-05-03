@@ -23,7 +23,7 @@ return {
 		PrettyPrint = false,
 		Seed = 0,
 		Steps = {
-			{ Name = "Vmify", Settings = {} },
+			{ Name = "Vmify", Settings = { MaxStatements = 160 } },
 			{
 				Name = "ConstantArray",
 				Settings = {
@@ -46,7 +46,7 @@ return {
 		PrettyPrint = false,
 		Seed = 0,
 		Steps = {
-			{ Name = "Vmify", Settings = {} },
+			{ Name = "Vmify", Settings = { MaxStatements = 120 } },
 		},
 	},
 
@@ -66,7 +66,7 @@ return {
 				},
 			},
 			{ Name = "ProxifyLocals", Settings = { MaxUsageCount = 8 } },
-			{ Name = "Vmify", Settings = {} },
+			{ Name = "Vmify", Settings = { MaxStatements = 120 } },
 			{
 				Name = "ConstantArray",
 				Settings = {
@@ -92,7 +92,7 @@ return {
 		PrettyPrint = false,
 		Seed = 0,
 		Steps = {
-			{ Name = "Vmify", Settings = {} },
+			{ Name = "Vmify", Settings = { MaxStatements = 120 } },
 			{ Name = "EncryptStrings", Settings = {} },
 			{
 				Name = "AntiTamper",
@@ -100,7 +100,7 @@ return {
 					UseDebug = false,
 				},
 			},
-			{ Name = "Vmify", Settings = {} },
+			{ Name = "Vmify", Settings = { MaxStatements = 120 } },
 			{
 				Name = "ConstantArray",
 				Settings = {
@@ -143,7 +143,7 @@ return {
 					UseDebug = false,
 				},
 			},
-			{ Name = "Vmify", Settings = {} },
+			{ Name = "Vmify", Settings = { MaxStatements = 120 } },
 			{
 				Name = "ConstantArray",
 				Settings = {
@@ -182,7 +182,7 @@ return {
 					UseDebug = false,
 				},
 			},
-			{ Name = "Vmify", Settings = {} },
+			{ Name = "Vmify", Settings = { MaxStatements = 120 } },
 			{
 				Name = "ConstantArray",
 				Settings = {

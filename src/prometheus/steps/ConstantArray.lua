@@ -265,7 +265,7 @@ function ConstantArray:addDecodeCode(ast)
 		"local floor = math.floor;",
 		"local strchar = string.char;",
 		"local insert = table.insert;",
-		"local concat = table.concat;",
+		"local function concat(parts) local out = '' for i = 1, #parts do out = out .. parts[i] end return out end;",
 		"local type = type;",
 		"local arr = ARR;",
 	})) .. [[
@@ -340,7 +340,7 @@ function ConstantArray:addDecodeCode(ast)
 		"local floor = math.floor;",
 		"local strchar = string.char;",
 		"local insert = table.insert;",
-		"local concat = table.concat;",
+		"local function concat(parts) local out = '' for i = 1, #parts do out = out .. parts[i] end return out end;",
 		"local type = type;",
 		"local arr = ARR;",
 	})) .. [[
@@ -430,7 +430,7 @@ function ConstantArray:addDecodeCode(ast)
 		"local floor = math.floor;",
 		"local strchar = string.char;",
 		"local insert = table.insert;",
-		"local concat = table.concat;",
+		"local function concat(parts) local out = '' for i = 1, #parts do out = out .. parts[i] end return out end;",
 		"local type = type;",
 		"local arr = ARR;",
 	})) .. [[

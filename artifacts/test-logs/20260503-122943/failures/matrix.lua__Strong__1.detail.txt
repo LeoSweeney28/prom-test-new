@@ -1,0 +1,42 @@
+Reason: runtime-status-mismatch
+
+[Source output]
+19,22
+43,50
+
+[Obfuscated output]
+
+
+[Source returns]
+
+
+[Obfuscated returns]
+<none>
+
+[Source err]
+table: 01D34AB8
+
+[Obfuscated err]
+matrix.lua__Strong__1.obfuscated:1: attempt to perform arithmetic on field '?' (a nil value)
+stack traceback:
+	matrix.lua__Strong__1.obfuscated:1: in function 'h'
+	matrix.lua__Strong__1.obfuscated:1: in function <matrix.lua__Strong__1.obfuscated:1>
+	(tail call): ?
+	matrix.lua__Strong__1.obfuscated:1: in function <matrix.lua__Strong__1.obfuscated:1>
+	(tail call): ?
+	matrix.lua__Strong__1.obfuscated:1: in function <matrix.lua__Strong__1.obfuscated:1>
+	(tail call): ?
+	matrix.lua__Strong__1.obfuscated:1: in function <matrix.lua__Strong__1.obfuscated:1>
+	(tail call): ?
+	matrix.lua__Strong__1.obfuscated:1: in function <matrix.lua__Strong__1.obfuscated:1>
+	(tail call): ?
+	matrix.lua__Strong__1.obfuscated:1: in function <matrix.lua__Strong__1.obfuscated:1>
+	(tail call): ?
+	(tail call): ?
+	(tail call): ?
+	(tail call): ?
+	tests_verbose.lua:180: in function <tests_verbose.lua:179>
+	[C]: in function 'xpcall'
+	tests_verbose.lua:179: in function 'captureRun'
+	tests_verbose.lua:388: in main chunk
+	[C]: ?

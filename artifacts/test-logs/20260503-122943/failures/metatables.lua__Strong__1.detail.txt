@@ -1,0 +1,21 @@
+Reason: print-output-mismatch
+
+[Source output]
+step1:(2,3)
+step2:(1,7)
+step3:(1,5)
+
+[Obfuscated output]
+
+
+[Source returns]
+
+
+[Obfuscated returns]
+<function>
+
+[Source err]
+table: 02193708
+
+[Obfuscated err]
+table: 02186300
