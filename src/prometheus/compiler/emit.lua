@@ -45,6 +45,49 @@ return function(Compiler)
         return decoys;
     end
 
+    -- Add complex decoy expressions (computed values, not just constants)
+    function Compiler:addComplexDecoyDeclarations(scope, count)
+        local decoys = {};
+        for i = 1, count do
+            if self:randRange(1, 3) == 1 then
+                -- Create computed decoy: random arithmetic expression
+                local left = Ast.NumberExpression(self:randRange(1, 1000));
+                local right = Ast.NumberExpression(self:randRange(1, 1000));
+                local op = self:randRange(1, 4);
+                local expr;
+                
+                if op == 1 then
+                    expr = Ast.AddExpression(left, right);
+                elseif op == 2 then
+                    expr = Ast.SubtractExpression(left, right);
+                elseif op == 3 then
+                    expr = Ast.MultiplyExpression(left, right);
+                else
+                    expr = Ast.PowerExpression(left, Ast.NumberExpression(2));
+                end
+                
+                table.insert(decoys, Ast.LocalVariableDeclaration(
+                    scope,
+                    {Ast.Variable(scope, "_CD" .. self:randRange(1000, 9999))},
+                    {expr}
+                ));
+            end
+        end
+        return decoys;
+    end
+
+    -- Cache dispatcher bounds to avoid redundant calculations
+    function Compiler:cacheDispatcherBounds(blocks)
+        local boundsCache = {};
+        for i = 1, #blocks - 1 do
+            local leftId = blocks[i].id;
+            local rightId = blocks[i + 1].id;
+            local bound = math.floor((leftId + rightId) / 2);
+            boundsCache[i] = bound;
+        end
+        return boundsCache;
+    end
+
     function Compiler:emitContainerFuncBody()
         local blocks = {};
 
@@ -86,7 +129,6 @@ return function(Compiler)
                 -- Kept for compatibility with caller variations.
                 return Ast.LessThanExpression(posExpr, boundExpr);
             else
-                -- Randomize between equivalent safe conditions
                 local variant = self:randRange(1, 2);
                 if variant == 1 then
                     return Ast.LessThanExpression(posExpr, boundExpr);
@@ -167,7 +209,7 @@ return function(Compiler)
                 condition = Ast.GreaterThanExpression(Ast.NumberExpression(bound), self:pos(ifScope));
                 trueBlock, falseBlock = lBlock, rBlock;
             else
-                -- Equivalent split using strict > with branches reversed
+                -- Equivalent split using strict > with branches reversed.
                 condition = Ast.GreaterThanExpression(self:pos(ifScope), Ast.NumberExpression(bound));
                 trueBlock, falseBlock = rBlock, lBlock;
             end
@@ -215,7 +257,6 @@ return function(Compiler)
         for _, decoy in ipairs(decoys) do
             table.insert(stats, decoy);
         end
-
 
         table.insert(stats, Ast.WhileStatement(whileBody, Ast.VariableExpression(self.containerFuncScope, self.posVar)));
 
