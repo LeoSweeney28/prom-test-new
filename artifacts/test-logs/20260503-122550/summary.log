@@ -1,0 +1,11 @@
+[INFO] Starting extended tests: files=4 presets=1 iterations=1 out=artifacts/test-logs/20260503-122550
+[PASS] file=loops.lua preset=Vmify iter=1 reason=ok obf_ms=19.00 ratio=151.72% seed=explicit
+[PASS] file=multi-return.lua preset=Vmify iter=1 reason=ok obf_ms=25.00 ratio=220.22% seed=explicit
+[PASS] file=repeat-test.lua preset=Vmify iter=1 reason=ok obf_ms=27.00 ratio=116.50% seed=explicit
+[PASS] file=upvalues.lua preset=Vmify iter=1 reason=ok obf_ms=15.00 ratio=235.14% seed=explicit
+
+========== SUMMARY ==========
+Total Cases: 4
+Passed: 4
+Failed: 0
+Preset=Vmify total=4 pass=4 fail=0 avg_obf_ms=21.50

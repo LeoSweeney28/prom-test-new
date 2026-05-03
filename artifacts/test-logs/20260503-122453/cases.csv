@@ -1,0 +1,17 @@
+status,file,preset,iteration,reason,obf_ms,size_ratio,seed_source
+PASS,ambiguous-call.lua,Medium,1,ok,41.000,2695.706,explicPASPASS,closures.lua,Medium,1,ok,42.000,2963.973,explicit
+PASS,coroutines.lua,Medium,1,ok,43.000,1807.692,explicit
+PASS,fibonacci.lua,Medium,1,ok,45.000,3296.127,explicit
+PASS,fibonacci.obfuscated.lua,Medium,1,ok,63.000,656.032,explicit
+PASS,iterator.lua,Medium,1,ok,43.000,1986.712,explicit
+PASS,loops.lua,Medium,1,ok,62.000,409.175,explicit
+PASS,matrix.lua,Medium,1,ok,51.000,1549.082,explicit
+PASS,metatables.lua,Medium,1,ok,47.000,1489.405,explicit
+PASS,multi-return.lua,Medium,1,ok,74.000,572.350,explicit
+PASS,primes.lua,Medium,1,ok,44.000,2053.377,explicit
+PASS,repeat-test.lua,Medium,1,ok,99.000,395.628,explicit
+PASS,state-machine.lua,Medium,1,ok,48.000,1311.138,explicit
+PASS,strings.lua,Medium,1,ok,45.000,1842.886,explicit
+PASS,syntax.lua,Medium,1,ok,49.000,1094.529,explicit
+PASS,table-merge.lua,Medium,1,ok,53.000,1484.317,explicit
+PASS,upvalues.lua,Medium,1,ok,67.000,757.186,explicit

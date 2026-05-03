@@ -1,0 +1,6 @@
+status,file,preset,iteration,reason,obf_ms,size_ratio,seed_source
+FAIL,loops.lua,Medium,1,obfuscation-error,16.000,0.000,explicit
+FAIL,multi-return.lua,Medium,1,obfuscation-error,10.000,0.000,explicit
+FAIL,upvalues.lua,Medium,1,obfuscation-error,15.000,0.000,explicit
+plicit
+FAIL,table-merge.lua,Medium,1,obfuscation-error,18.000,0.000,explicit

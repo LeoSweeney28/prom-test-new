@@ -22,6 +22,14 @@ function Step:new(settings)
 		settings = {};
 	end
 
+	if type(self.SettingsAliases) == "table" then
+		for alias, canonical in pairs(self.SettingsAliases) do
+			if settings[canonical] == nil and settings[alias] ~= nil then
+				settings[canonical] = settings[alias];
+			end
+		end
+	end
+
 	for key, data in pairs(self.SettingsDescriptor) do
 		if settings[key] == nil then
 			if data.default == nil then

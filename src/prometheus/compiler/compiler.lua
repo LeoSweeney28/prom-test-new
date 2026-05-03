@@ -55,6 +55,7 @@ function Compiler:new(options)
         };
 
 		_seedOverride = tonumber(options.Seed);
+        _maxStatements = math.max(1, tonumber(options.MaxStatements) or 1000);
     };
 
     setmetatable(compiler, self);

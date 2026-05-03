@@ -12,7 +12,18 @@ local Vmify = Step:extend();
 Vmify.Description = "This Step will Compile your script into a fully-custom (not a half custom like other lua obfuscators) Bytecode Format and emit a vm for executing it.";
 Vmify.Name = "Vmify";
 
-Vmify.SettingsDescriptor = {}
+Vmify.SettingsDescriptor = {
+    MaxStatements = {
+        name = "MaxStatements",
+        description = "Maximum number of statements per hardened VM dispatcher block",
+        type = "number",
+        default = 1000,
+        min = 1,
+    },
+}
+Vmify.SettingsAliases = {
+    MaxStatementsPerBlock = "MaxStatements",
+}
 
 function Vmify:init(_) end
 
@@ -50,7 +61,10 @@ function Vmify:apply(ast, pipeline)
     end
 
     -- Create Compiler
-    local compiler = Compiler:new({ Seed = compilerSeed; });
+    local compiler = Compiler:new({
+        Seed = compilerSeed;
+        MaxStatements = self.MaxStatements;
+    });
 
     -- Compile the Script into a bytecode vm
     return compiler:compile(ast);

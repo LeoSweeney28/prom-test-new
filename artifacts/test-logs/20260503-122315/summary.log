@@ -1,0 +1,10 @@
+[INFO] Starting extended tests: files=3 presets=1 iterations=1 out=artifacts/test-logs/20260503-122315
+[PASS] file=loops.lua preset=Medium iter=1 reason=ok obf_ms=65.00 ratio=409.00% seed=explicit
+[PASS][PASS] file=repeat-test.lua preset=Medium iter=1 reason=ok obf_ms=103.00 ratio=395.65% seed=exp[PASS][PASS] file=state-machine.lua preset=Medium iter=1 reason=ok obf_ms=55.00 ratio=1311.02% seed=explicit
+[PASS] file=table-merge.lua preset=Medium iter=1 reason=ok obf_ms=52.00 ratio=1484.32% seed=explicit
+
+========== SUMMARY ==========
+Total Cases: 4
+Passed: 4
+Failed: 0
+Preset=Medium total=4 pass=4 fail=0 avg_obf_ms=65.75

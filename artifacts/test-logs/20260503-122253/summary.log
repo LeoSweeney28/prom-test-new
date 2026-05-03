@@ -1,0 +1,12 @@
+[INFO] Starting extended tests: files=3 presets=1 iterations=1 out=artifacts/test-logs/20260503-122253
+[FAIL] file=loops.lua preset=Medium iter=1 reason=obfuscation-error obf_ms=16.00 ratio=0.00% seed=explicit
+[FAIL] file=multi-return.lua preset=Medium iter=1 reason=obfuscation-error obf_ms=10.00 ratio=0.00% seed=explicit
+[FAIL] file=upvalues.lua preset=Medium iter=1 reason=obfuscation-error obf_ms=15.00 ratio=0.00% seed=explicit
+
+======[FAIL] file=table-merge.lua preset=Medium iter=1 reason=obfuscation-error obf_ms=18.00 ratio=0.00% seed=explicit
+
+========== SUMMARY ==========
+Total Cases: 4
+Passed: 0
+Failed: 4
+Preset=Medium total=4 pass=0 fail=4 avg_obf_ms=12.25

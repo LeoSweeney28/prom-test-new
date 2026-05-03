@@ -1,0 +1,4 @@
+status,file,preset,iteration,reason,obf_ms,size_ratio,seed_source
+PASS,loops.lua,Medium,1,ok,65.000,408.996,explicit
+PASS,mPASS,repeat-test.lua,Medium,1,ok,103.000,395.646,expPASS,uPASS,state-machine.lua,Medium,1,ok,55.000,1311.017,explicit
+PASS,table-merge.lua,Medium,1,ok,52.000,1484.317,explicit

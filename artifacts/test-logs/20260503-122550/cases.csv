@@ -1,0 +1,5 @@
+status,file,preset,iteration,reason,obf_ms,size_ratio,seed_source
+PASS,loops.lua,Vmify,1,ok,19.000,151.724,explicit
+PASS,multi-return.lua,Vmify,1,ok,25.000,220.219,explicit
+PASS,repeat-test.lua,Vmify,1,ok,27.000,116.502,explicit
+PASS,upvalues.lua,Vmify,1,ok,15.000,235.145,explicit

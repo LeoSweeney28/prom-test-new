@@ -101,7 +101,6 @@ local function isSafeProxifyInitializer(expr)
     return kind == AstKind.BooleanExpression
         or kind == AstKind.NumberExpression
         or kind == AstKind.StringExpression
-        or kind == AstKind.TableConstructorExpression
 end
 
 local function hasOpenReturnExpression(expr)
@@ -282,6 +281,12 @@ function ProxifyLocals:apply(ast, pipeline)
             or node.kind == AstKind.LocalFunctionDeclaration
             or node.kind == AstKind.FunctionLiteralExpression then
 
+            if node.kind == AstKind.LocalFunctionDeclaration then
+                disable(node.scope, node.id)
+            elseif node.kind == AstKind.FunctionDeclaration then
+                disable(node.scope, node.id)
+            end
+
             for _, arg in ipairs(node.args) do
                 if arg.kind == AstKind.VariableExpression then
                     disable(arg.scope, arg.id)
@@ -355,7 +360,7 @@ function ProxifyLocals:apply(ast, pipeline)
         -- Local functions
         elseif node.kind == AstKind.LocalFunctionDeclaration then
             local info = getInfo(node.scope, node.id)
-            if info then
+            if info and info.setValue and info.getValue and info.valueExpr then
                 local func = Ast.FunctionLiteralExpression(node.args, node.body)
                 return Ast.LocalVariableDeclaration(node.scope, { node.id }, {
                     self:CreateAssignmentExpression(info, func, node.scope)
@@ -365,7 +370,7 @@ function ProxifyLocals:apply(ast, pipeline)
         -- Global function declarations
         elseif node.kind == AstKind.FunctionDeclaration then
             local info = getInfo(node.scope, node.id)
-            if info then
+            if info and info.valueName then
                 table.insert(node.indices, 1, info.valueName)
             end
         end

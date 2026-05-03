@@ -95,7 +95,7 @@ return function(Compiler)
 
         local hardenedBlocks = VmHardening:hardenBlocks(self.blocks, {
             randRange = function(a, b) return self:randRange(a, b) end,
-            maxStatements = 140,
+            maxStatements = self._maxStatements or 1000,
         });
 
         shuffleWithCompilerRng(hardenedBlocks, function(a, b) return self:randRange(a, b) end);
