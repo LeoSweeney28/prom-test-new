@@ -1,333 +1,349 @@
--- This Script is Part of the Prometheus Obfuscator by Levno_710
---
--- ProxifyLocals.lua
---
--- This Script provides a Obfuscation Step for putting all Locals into Proxy Objects
+-- ProxifyLocals.lua (Fixed & Stable)
 
-local Step = require("prometheus.step");
-local Ast = require("prometheus.ast");
-local Scope = require("prometheus.scope");
-local visitast = require("prometheus.visitast");
+local Step = require("prometheus.step")
+local Ast = require("prometheus.ast")
+local Scope = require("prometheus.scope")
+local visitast = require("prometheus.visitast")
 local RandomLiterals = require("prometheus.randomLiterals")
 
-local AstKind = Ast.AstKind;
+local AstKind = Ast.AstKind
 
-local ProxifyLocals = Step:extend();
-ProxifyLocals.Description = "This Step wraps all locals into Proxy Objects";
-ProxifyLocals.Name = "Proxify Locals";
+local ipairs = ipairs
+local pairs = pairs
+local type = type
+
+local ProxifyLocals = Step:extend()
+ProxifyLocals.Description = "Wraps locals into Proxy Objects"
+ProxifyLocals.Name = "Proxify Locals"
 
 ProxifyLocals.SettingsDescriptor = {
-	LiteralType = {
-		name = "LiteralType",
-		description = "The type of the randomly generated literals",
-		type = "enum",
-		values = {
-			"dictionary",
-			"number",
-			"string",
-            "any",
-		},
-		default = "string",
-	},
+    LiteralType = {
+        name = "LiteralType",
+        description = "Type of randomly generated literals",
+        type = "enum",
+        values = { "dictionary", "number", "string", "any" },
+        default = "number",
+    },
+    MaxUsageCount = {
+        name = "MaxUsageCount",
+        description = "Only proxify locals used this many times or fewer",
+        type = "number",
+        default = 8,
+        min = 0,
+        max = nil,
+    },
 }
 
-local function shallowcopy(orig)
-    local orig_type = type(orig)
-    local copy
-    if orig_type == 'table' then
-        copy = {}
-        for orig_key, orig_value in pairs(orig) do
-            copy[orig_key] = orig_value
-        end
-    else -- number, string, boolean, etc
-        copy = orig
-    end
-    return copy
-end
-
-local function callNameGenerator(generatorFunction, ...)
-	if(type(generatorFunction) == "table") then
-		generatorFunction = generatorFunction.generateName;
-	end
-	return generatorFunction(...);
-end
-
+-- Metamethod pool
 local MetatableExpressions = {
-    {
-        constructor = Ast.AddExpression,
-        key = "__add";
-    },
-    {
-        constructor = Ast.SubExpression,
-        key = "__sub";
-    },
-    {
-        constructor = Ast.IndexExpression,
-        key = "__index";
-    },
-    {
-        constructor = Ast.MulExpression,
-        key = "__mul";
-    },
-    {
-        constructor = Ast.DivExpression,
-        key = "__div";
-    },
-    {
-        constructor = Ast.PowExpression,
-        key = "__pow";
-    },
-    {
-        constructor = Ast.StrCatExpression,
-        key = "__concat";
-    }
+    { constructor = Ast.AddExpression, key = "__add" },
+    { constructor = Ast.SubExpression, key = "__sub" },
+    { constructor = Ast.MulExpression, key = "__mul" },
+    { constructor = Ast.DivExpression, key = "__div" },
+    { constructor = Ast.PowExpression, key = "__pow" },
+    { constructor = Ast.StrCatExpression, key = "__concat" },
 }
 
-function ProxifyLocals:init(_) end
 
-function ProxifyLocals:_range(minValue, maxValue)
-	if self._rng and type(self._rng.range) == "function" then
-		return self._rng:range(minValue, maxValue)
-	end
-	if maxValue == nil then
-		return math.random(minValue)
-	end
-	return math.random(minValue, maxValue)
+function ProxifyLocals:_range(min, max)
+    if self._rng and self._rng.range then
+        return self._rng:range(min, max)
+    end
+    return max and math.random(min, max) or math.random(min)
 end
 
-local function generateLocalMetatableInfo(pipeline, randRange)
-    local usedOps = {};
-    local info = {};
-    for i, v in ipairs({"setValue", "getValue", "index"}) do
-        local rop;
-        repeat
-            rop = MetatableExpressions[randRange(1, #MetatableExpressions)];
-        until not usedOps[rop];
-        usedOps[rop] = true;
-        info[v] = rop;
+function ProxifyLocals:init(_)
+    -- override base
+end
+
+-- Fisher–Yates shuffle
+local function pickOps(rand)
+    local ops = {}
+    for i = 1, #MetatableExpressions do
+        ops[i] = MetatableExpressions[i]
+    end
+    for i = #ops, 2, -1 do
+        local j = rand(1, i)
+        ops[i], ops[j] = ops[j], ops[i]
+    end
+    return {
+        setValue = ops[1],
+        getValue = ops[2],
+    }
+end
+
+local function callNameGenerator(gen, ...)
+    if type(gen) == "table" then
+        gen = gen.generateName
+    end
+    return gen(...)
+end
+
+local function generateLocalMetatableInfo(self, pipeline)
+    local ops = pickOps(function(a, b) return self:_range(a, b) end)
+
+    local valueName = callNameGenerator(pipeline.namegenerator, self:_range(1, 4096))
+
+    return {
+        setValue = ops.setValue,
+        getValue = ops.getValue,
+        valueName = valueName,
+        valueExpr = Ast.StringExpression(valueName),
+    }
+end
+
+local function isSafeProxifyInitializer(expr)
+    if not expr then
+        return true
     end
 
-    info.valueName = callNameGenerator(pipeline.namegenerator, randRange(1, 4096));
-
-    return info;
+    local kind = expr.kind
+    return kind == AstKind.BooleanExpression
+        or kind == AstKind.NilExpression
+        or kind == AstKind.NumberExpression
+        or kind == AstKind.StringExpression
+        or kind == AstKind.TableConstructorExpression
 end
 
 function ProxifyLocals:CreateAssignmentExpression(info, expr, parentScope)
-    local metatableVals = {};
+    local entries = {}
 
-    -- Setvalue Entry
-    local setValueFunctionScope = Scope:new(parentScope);
-    local setValueSelf = setValueFunctionScope:addVariable();
-    local setValueArg = setValueFunctionScope:addVariable();
-    local setvalueFunctionLiteral = Ast.FunctionLiteralExpression(
+    -- setValue
+    local sScope = Scope:new(parentScope)
+    local selfVar = sScope:addVariable()
+    local valVar = sScope:addVariable()
+
+    local setFunc = Ast.FunctionLiteralExpression(
         {
-            Ast.VariableExpression(setValueFunctionScope, setValueSelf), -- Argument 1
-            Ast.VariableExpression(setValueFunctionScope, setValueArg), -- Argument 2
+            Ast.VariableExpression(sScope, selfVar),
+            Ast.VariableExpression(sScope, valVar),
         },
-        Ast.Block({ -- Create Function Body
+        Ast.Block({
             Ast.AssignmentStatement({
-                Ast.AssignmentIndexing(Ast.VariableExpression(setValueFunctionScope, setValueSelf), Ast.StringExpression(info.valueName));
+                Ast.AssignmentIndexing(
+                    Ast.VariableExpression(sScope, selfVar),
+                    info.valueExpr
+                )
             }, {
-                Ast.VariableExpression(setValueFunctionScope, setValueArg)
+                Ast.VariableExpression(sScope, valVar)
             })
-        }, setValueFunctionScope)
-    );
-    table.insert(metatableVals, Ast.KeyedTableEntry(Ast.StringExpression(info.setValue.key), setvalueFunctionLiteral));
+        }, sScope)
+    )
 
-    -- Getvalue Entry
-    local getValueFunctionScope = Scope:new(parentScope);
-    local getValueSelf = getValueFunctionScope:addVariable();
-    local getValueArg = getValueFunctionScope:addVariable();
-    local getValueIdxExpr;
-    if(info.getValue.key == "__index" or info.setValue.key == "__index") then
-        getValueIdxExpr = Ast.FunctionCallExpression(Ast.VariableExpression(getValueFunctionScope:resolveGlobal("rawget")), {
-            Ast.VariableExpression(getValueFunctionScope, getValueSelf),
-            Ast.StringExpression(info.valueName),
-        });
+    entries[#entries + 1] = Ast.KeyedTableEntry(
+        Ast.StringExpression(info.setValue.key),
+        setFunc
+    )
+
+    -- getValue
+    local gScope = Scope:new(parentScope)
+    local gSelf = gScope:addVariable()
+
+    local getExpr
+    if info.getValue.key == "__index" or info.setValue.key == "__index" then
+        getExpr = Ast.FunctionCallExpression(
+            Ast.VariableExpression(gScope:resolveGlobal("rawget")),
+            {
+                Ast.VariableExpression(gScope, gSelf),
+                info.valueExpr
+            }
+        )
     else
-        getValueIdxExpr = Ast.IndexExpression(Ast.VariableExpression(getValueFunctionScope, getValueSelf), Ast.StringExpression(info.valueName));
+        getExpr = Ast.IndexExpression(
+            Ast.VariableExpression(gScope, gSelf),
+            info.valueExpr
+        )
     end
-    local getvalueFunctionLiteral = Ast.FunctionLiteralExpression(
-        {
-            Ast.VariableExpression(getValueFunctionScope, getValueSelf), -- Argument 1
-            Ast.VariableExpression(getValueFunctionScope, getValueArg), -- Argument 2
-        },
-        Ast.Block({ -- Create Function Body
-            Ast.ReturnStatement({
-                getValueIdxExpr;
-            });
-        }, getValueFunctionScope)
-    );
-    table.insert(metatableVals, Ast.KeyedTableEntry(Ast.StringExpression(info.getValue.key), getvalueFunctionLiteral));
 
-    parentScope:addReferenceToHigherScope(self.setMetatableVarScope, self.setMetatableVarId);
+    local getFunc = Ast.FunctionLiteralExpression(
+        { Ast.VariableExpression(gScope, gSelf) },
+        Ast.Block({
+            Ast.ReturnStatement({ getExpr })
+        }, gScope)
+    )
+
+    entries[#entries + 1] = Ast.KeyedTableEntry(
+        Ast.StringExpression(info.getValue.key),
+        getFunc
+    )
+
+    parentScope:addReferenceToHigherScope(self.setMetatableVarScope, self.setMetatableVarId)
+
     return Ast.FunctionCallExpression(
         Ast.VariableExpression(self.setMetatableVarScope, self.setMetatableVarId),
         {
             Ast.TableConstructorExpression({
-                Ast.KeyedTableEntry(Ast.StringExpression(info.valueName), expr)
+                Ast.KeyedTableEntry(info.valueExpr, expr)
             }),
-            Ast.TableConstructorExpression(metatableVals)
+            Ast.TableConstructorExpression(entries)
         }
-    );
+    )
 end
 
 function ProxifyLocals:apply(ast, pipeline)
-    self._rng = nil;
-    if pipeline and type(pipeline.getRandom) == "function" then
-        self._rng = pipeline:getRandom();
-        if self._rng and type(self._rng.derive) == "function" then
-            self._rng = self._rng:derive("ProxifyLocals");
-        end
+    self._rng = pipeline and pipeline.getRandom and pipeline:getRandom()
+    if self._rng and self._rng.derive then
+        self._rng = self._rng:derive("ProxifyLocals")
     end
 
-    local localMetatableInfos = {};
-    local function getLocalMetatableInfo(scope, id)
-        -- Global Variables should not be transformed
-        if(scope.isGlobal) then return nil end;
+    local localInfos = {}
+    local literalCache = {}
+    local usageCounts = {}
 
-        localMetatableInfos[scope] = localMetatableInfos[scope] or {};
-        if localMetatableInfos[scope][id] then
-            -- If locked, return no Metatable
-            if localMetatableInfos[scope][id].locked then
-                return nil
+    visitast(ast, function(node)
+        if not node or not node.scope or node.scope.isGlobal then
+            return
+        end
+
+        if node.kind == AstKind.VariableExpression or node.kind == AstKind.AssignmentVariable then
+            usageCounts[node.scope] = usageCounts[node.scope] or {}
+            usageCounts[node.scope][node.id] = (usageCounts[node.scope][node.id] or 0) + 1
+        end
+    end)
+
+    local maxUsageCount = tonumber(self.MaxUsageCount) or 8
+
+    local function getInfo(scope, id)
+        if not scope or scope.isGlobal then return nil end
+        if scope == self.setMetatableVarScope and id == self.setMetatableVarId then
+            return nil
+        end
+
+        local scopeCounts = usageCounts[scope]
+        if scopeCounts and (scopeCounts[id] or 0) > maxUsageCount then
+            return nil
+        end
+
+        localInfos[scope] = localInfos[scope] or {}
+        local entry = localInfos[scope][id]
+
+        if entry ~= nil then
+            return entry.locked and nil or entry
+        end
+
+        local info = generateLocalMetatableInfo(self, pipeline)
+        localInfos[scope][id] = info
+        return info
+    end
+
+    local function disable(scope, id)
+        if not scope or scope.isGlobal then return end
+        localInfos[scope] = localInfos[scope] or {}
+        localInfos[scope][id] = { locked = true }
+    end
+
+    local function getLiteral(info)
+        return literalCache[info] or (function()
+            local lit
+            if self.LiteralType == "dictionary" then
+                lit = RandomLiterals.Dictionary(pipeline, self._rng)
+            elseif self.LiteralType == "number" then
+                lit = RandomLiterals.Number(pipeline, self._rng)
+            elseif self.LiteralType == "string" then
+                lit = RandomLiterals.String(pipeline, self._rng)
+            else
+                lit = RandomLiterals.Any(pipeline, self._rng)
             end
-            return localMetatableInfos[scope][id];
-        end
-        local localMetatableInfo = generateLocalMetatableInfo(pipeline, function(minValue, maxValue)
-			return self:_range(minValue, maxValue);
-		end);
-        localMetatableInfos[scope][id] = localMetatableInfo;
-        return localMetatableInfo;
+            literalCache[info] = lit
+            return lit
+        end)()
     end
 
-    local function disableMetatableInfo(scope, id)
-        -- Global Variables should not be transformed
-        if(scope.isGlobal) then return nil end;
+    -- setmetatable binding
+    self.setMetatableVarScope = ast.body.scope
+    self.setMetatableVarId = ast.body.scope:addVariable()
 
-        localMetatableInfos[scope] = localMetatableInfos[scope] or {};
-        localMetatableInfos[scope][id] = {locked = true}
-    end
+    table.insert(ast.body.statements, 1,
+        Ast.LocalVariableDeclaration(self.setMetatableVarScope, { self.setMetatableVarId }, {
+            Ast.VariableExpression(self.setMetatableVarScope:resolveGlobal("setmetatable"))
+        })
+    )
 
-    -- Create Setmetatable Variable
-    self.setMetatableVarScope = ast.body.scope;
-    self.setMetatableVarId = ast.body.scope:addVariable();
+    visitast(ast, function(node)
+        if node.kind == AstKind.ForStatement then
+            disable(node.scope, node.id)
 
-    -- Create Empty Function Variable
-    self.emptyFunctionScope = ast.body.scope;
-    self.emptyFunctionId = ast.body.scope:addVariable();
-    self.emptyFunctionUsed = false;
+        elseif node.kind == AstKind.ForInStatement then
+            for _, id in ipairs(node.ids) do
+                disable(node.scope, id)
+            end
 
-    -- Add Empty Function Declaration
-    table.insert(ast.body.statements, 1, Ast.LocalVariableDeclaration(self.emptyFunctionScope, {self.emptyFunctionId}, {
-        Ast.FunctionLiteralExpression({}, Ast.Block({}, Scope:new(ast.body.scope)));
-    }));
+        elseif node.kind == AstKind.FunctionDeclaration
+            or node.kind == AstKind.LocalFunctionDeclaration
+            or node.kind == AstKind.FunctionLiteralExpression then
 
-
-    visitast(ast, function(node, data)
-        -- Lock for loop variables
-        if(node.kind == AstKind.ForStatement) then
-            disableMetatableInfo(node.scope, node.id)
+            for _, arg in ipairs(node.args) do
+                if arg.kind == AstKind.VariableExpression then
+                    disable(arg.scope, arg.id)
+                end
+            end
         end
-        if(node.kind == AstKind.ForInStatement) then
+    end,
+    function(node)
+        -- Local declarations
+        if node.kind == AstKind.LocalVariableDeclaration then
             for i, id in ipairs(node.ids) do
-                disableMetatableInfo(node.scope, id);
-            end
-        end
-
-        -- Lock Function Arguments
-        if(node.kind == AstKind.FunctionDeclaration or node.kind == AstKind.LocalFunctionDeclaration or node.kind == AstKind.FunctionLiteralExpression) then
-            for i, expr in ipairs(node.args) do
-                if expr.kind == AstKind.VariableExpression then
-                    disableMetatableInfo(expr.scope, expr.id);
+                local info = getInfo(node.scope, id)
+                local expr = node.expressions[i] or Ast.NilExpression()
+                if info and isSafeProxifyInitializer(expr) then
+                    node.expressions[i] = self:CreateAssignmentExpression(info, expr, node.scope)
+                elseif info then
+                    disable(node.scope, id)
                 end
             end
-        end
 
-        -- Assignment Statements may be Obfuscated Differently
-        if(node.kind == AstKind.AssignmentStatement) then
-            if(#node.lhs == 1 and node.lhs[1].kind == AstKind.AssignmentVariable) then
-                local variable = node.lhs[1];
-                local localMetatableInfo = getLocalMetatableInfo(variable.scope, variable.id);
-                if localMetatableInfo then
-                    local args = shallowcopy(node.rhs);
-                    local vexp = Ast.VariableExpression(variable.scope, variable.id);
-                    vexp.__ignoreProxifyLocals = true;
-                    args[1] = localMetatableInfo.setValue.constructor(vexp, args[1]);
-                    self.emptyFunctionUsed = true;
-                    data.scope:addReferenceToHigherScope(self.emptyFunctionScope, self.emptyFunctionId);
-                    return Ast.FunctionCallStatement(Ast.VariableExpression(self.emptyFunctionScope, self.emptyFunctionId), args);
+        -- Reading a local
+        elseif node.kind == AstKind.VariableExpression and not node.__ignoreProxifyLocals then
+            local info = getInfo(node.scope, node.id)
+            if info and info.getValue then
+                return info.getValue.constructor(node, getLiteral(info))
+            end
+
+        -- Writing to a local
+        elseif node.kind == AstKind.AssignmentStatement then
+            if #node.lhs == 1 and node.lhs[1].kind == AstKind.AssignmentVariable then
+                local var = node.lhs[1]
+                local info = getInfo(var.scope, var.id)
+
+                if info and info.setValue then
+                    local vexp = Ast.VariableExpression(var.scope, var.id)
+                    vexp.__ignoreProxifyLocals = true
+
+                    return Ast.AssignmentStatement(node.lhs, {
+                        info.setValue.constructor(vexp, node.rhs[1])
+                    })
                 end
             end
-        end
-    end, function(node, data)
-        -- Local Variable Declaration
-        if(node.kind == AstKind.LocalVariableDeclaration) then
-            for i, id in ipairs(node.ids) do
-                local expr = node.expressions[i] or Ast.NilExpression();
-                local localMetatableInfo = getLocalMetatableInfo(node.scope, id);
-                -- Apply Only to Some Variables if Threshold is non 1
-                if localMetatableInfo then
-                    local newExpr = self:CreateAssignmentExpression(localMetatableInfo, expr, node.scope);
-                    node.expressions[i] = newExpr;
-                end
+        
+        -- Replace plain assignment variable (some AST forms use this)
+        elseif node.kind == AstKind.AssignmentVariable then
+            local info = getInfo(node.scope, node.id)
+            if info and info.valueExpr then
+                local varExpr = Ast.VariableExpression(node.scope, node.id)
+                varExpr.__ignoreProxifyLocals = true
+                return Ast.AssignmentIndexing(varExpr, info.valueExpr)
             end
-        end
 
-        -- Variable Expression
-        if(node.kind == AstKind.VariableExpression and not node.__ignoreProxifyLocals) then
-            local localMetatableInfo = getLocalMetatableInfo(node.scope, node.id);
-            -- Apply Only to Some Variables if Threshold is non 1
-            if localMetatableInfo then
-                local literal;
-                if self.LiteralType == "dictionary" then
-                    literal = RandomLiterals.Dictionary(pipeline, self._rng);
-                elseif self.LiteralType == "number" then
-                    literal = RandomLiterals.Number(pipeline, self._rng);
-                elseif self.LiteralType == "string" then
-                    literal = RandomLiterals.String(pipeline, self._rng);
-                else
-                    literal = RandomLiterals.Any(pipeline, self._rng);
-                end
-                return localMetatableInfo.getValue.constructor(node, literal);
+        -- Local functions
+        elseif node.kind == AstKind.LocalFunctionDeclaration then
+            local info = getInfo(node.scope, node.id)
+            if info then
+                local func = Ast.FunctionLiteralExpression(node.args, node.body)
+                return Ast.LocalVariableDeclaration(node.scope, { node.id }, {
+                    self:CreateAssignmentExpression(info, func, node.scope)
+                })
             end
-        end
 
-        -- Assignment Variable for Assignment Statement
-        if(node.kind == AstKind.AssignmentVariable) then
-            local localMetatableInfo = getLocalMetatableInfo(node.scope, node.id);
-            -- Apply Only to Some Variables if Threshold is non 1
-            if localMetatableInfo then
-                return Ast.AssignmentIndexing(node, Ast.StringExpression(localMetatableInfo.valueName));
-            end
-        end
-
-        -- Local Function Declaration
-        if(node.kind == AstKind.LocalFunctionDeclaration) then
-            local localMetatableInfo = getLocalMetatableInfo(node.scope, node.id);
-            -- Apply Only to Some Variables if Threshold is non 1
-            if localMetatableInfo then
-                local funcLiteral = Ast.FunctionLiteralExpression(node.args, node.body);
-                local newExpr = self:CreateAssignmentExpression(localMetatableInfo, funcLiteral, node.scope);
-                return Ast.LocalVariableDeclaration(node.scope, {node.id}, {newExpr});
-            end
-        end
-
-        -- Function Declaration
-        if(node.kind == AstKind.FunctionDeclaration) then
-            local localMetatableInfo = getLocalMetatableInfo(node.scope, node.id);
-            if(localMetatableInfo) then
-                table.insert(node.indices, 1, localMetatableInfo.valueName);
+        -- Global function declarations
+        elseif node.kind == AstKind.FunctionDeclaration then
+            local info = getInfo(node.scope, node.id)
+            if info then
+                table.insert(node.indices, 1, info.valueName)
             end
         end
     end)
 
-    -- Add Setmetatable Variable Declaration
-    table.insert(ast.body.statements, 1, Ast.LocalVariableDeclaration(self.setMetatableVarScope, {self.setMetatableVarId}, {
-        Ast.VariableExpression(self.setMetatableVarScope:resolveGlobal("setmetatable"))
-    }));
-
-	self._rng = nil;
+    self._rng = nil
 end
 
-return ProxifyLocals;
+return ProxifyLocals

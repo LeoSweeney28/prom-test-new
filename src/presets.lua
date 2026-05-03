@@ -65,6 +65,7 @@ return {
 					UseDebug = false,
 				},
 			},
+			{ Name = "ProxifyLocals", Settings = { MaxUsageCount = 8 } },
 			{ Name = "Vmify", Settings = {} },
 			{
 				Name = "ConstantArray",
@@ -77,7 +78,7 @@ return {
 				},
 			},
 			{ Name = "NumbersToExpressions", Settings = {} },
-			{Name = "ControlFlow", Settings = {}},
+			{ Name = "ControlFlow", Settings = {} },
 			{ Name = "WrapInFunction", Settings = {} },
 
 		},

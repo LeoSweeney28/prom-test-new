@@ -9,6 +9,7 @@ description: This Step wraps all locals into Proxy Objects
 | Name        | type | description                                 | values                                  |
 | ----------- | ---- | ------------------------------------------- | --------------------------------------- |
 | LiteralType | enum | The type of the randomly generated literals | "dictionary", "number", "string", "any" |
+| MaxUsageCount | number | Only proxify locals used this many times or fewer | 0 or higher |
 
 ### Example
 
