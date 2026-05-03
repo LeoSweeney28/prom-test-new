@@ -59,12 +59,12 @@ return {
 		Seed = 0,
 		Steps = {
 			{ Name = "EncryptStrings", Settings = {} },
-			-- {
-			-- 	Name = "AntiTamper",
-			-- 	Settings = {
-			-- 		UseDebug = false,
-			-- 	},
-			-- },
+			{
+				Name = "AntiTamper",
+				Settings = {
+					UseDebug = false,
+				},
+			},
 			{ Name = "Vmify", Settings = {} },
 			{
 				Name = "ConstantArray",
