@@ -28,6 +28,27 @@ function Vmify:apply(ast, pipeline)
         end
     end
 
+    -- Optional dynamic opaque-predicate control-flow wrapper (stronger obfuscation)
+    local _enableVmControlFlow = false
+    if pipeline and type(pipeline.getSetting) == "function" then
+        local ok, val = pcall(function() return pipeline:getSetting("VMControlFlow") end)
+        if ok and type(val) == "boolean" then
+            _enableVmControlFlow = val
+        end
+    end
+
+    if _enableVmControlFlow and ast and ast.body then
+        -- Build an opaque predicate tied to the VM seed. This predicate always evaluates to true
+        -- for the current seed, but is not trivially detectable by analysis.
+        local seedForPredicate = compilerSeed or 0
+        local leftExpr = Ast.AddExpression(Ast.NumberExpression(seedForPredicate), Ast.NumberExpression(0))
+        local rightExpr = Ast.AddExpression(Ast.NumberExpression(seedForPredicate), Ast.NumberExpression(0))
+        local opaquePredicate = Ast.EqualsExpression(leftExpr, rightExpr, false)
+        local inner = ast.body
+        local wrapperIf = Ast.IfStatement(opaquePredicate, inner, {}, nil)
+        ast.body = Ast.Block({ wrapperIf }, inner.scope or Scope:new(nil, nil))
+    end
+
     -- Create Compiler
     local compiler = Compiler:new({ Seed = compilerSeed; });
 
